@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/Proyecto-Bolsa-De-Empleo.iml" filepath="$PROJECT_DIR$/Proyecto-Bolsa-De-Empleo.iml" />
+      <module fileurl="file://$PROJECT_DIR$/proyecto-bolsa-empleo-frontend/proyecto-bolsa-empleo-frontend.iml" filepath="$PROJECT_DIR$/proyecto-bolsa-empleo-frontend/proyecto-bolsa-empleo-frontend.iml" />
+    </modules>
+  </component>
+</project>
