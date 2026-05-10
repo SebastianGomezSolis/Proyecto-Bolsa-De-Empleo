@@ -8,17 +8,10 @@ import { obtenerToken } from './authService';
 // URL base del backend (localhost:8080 es donde corre el Spring Boot por defecto)
 export const API_BASE = 'http://localhost:8080';
 // Base de todas las rutas de API (todos los endpoints empiezan con /api)
-export const BASE_API = `${API_BASE}/ai`;
+export const BASE_API = `${API_BASE}/api`;
 
-/**
- * Función genérica para hacer peticiones HTTP al backend.
- * Maneja automáticamente la inclusión del token JWT en los headers
- * y el parsing de la respuesta JSON.
- * 
- * @param ruta - El endpoint al que se quiere hacer la petición (ej: '/auth/login')
- * @param opciones - Opciones de la petición Fetch (method, body, etc.)
- * @returns Promise que resuelve con los datos de la respuesta tipados como T
- */
+// Función genérica para hacer peticiones HTTP al backend.
+// Maneja automáticamente la inclusión del token JWT en los headers y el parsing de la respuesta JSON.
 async function solicitar<T>(ruta: string, opciones: RequestInit = {}): Promise<T> {
   // Obtener el token JWT del localStorage (si existe)
   const token = obtenerToken();
