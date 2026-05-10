@@ -13,12 +13,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TipoCambio {
-    // Valor de compra del dolar (cuanto te pagan por un dolar)
     private double compra;
-
-    // Valor de venta del dolar (cuanto cuesta un dolar)
     private double venta;
-
-    // Moneda de referencia (normalmente "USD" para dolares americanos)
     private String moneda;
 }

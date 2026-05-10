@@ -8,7 +8,5 @@ import java.util.List;
 // Repositorio para operaciones CRUD con la entidad PuestoCaracteristica.
 // Proporciona consultas para obtener los requisitos de un puesto.
 public interface PuestoCaracteristicaRepository extends CrudRepository<PuestoCaracteristica, Integer> {
-    // Busca todas las relaciones puesto-caracteristica para un puesto especifico.
-    // Retorna la lista de caracteristicas (con niveles) requeridas por el puesto.
     List<PuestoCaracteristica> findByPuestoId(Integer puestoId);
 }

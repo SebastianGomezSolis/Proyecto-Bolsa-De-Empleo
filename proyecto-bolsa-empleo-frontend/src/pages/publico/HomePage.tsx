@@ -1,5 +1,4 @@
-// Página de inicio pública del sistema. Muestra tarjetas de acción
-// (empresas, oferentes, puestos) y los últimos puestos publicados.
+// Página de inicio pública del sistema. Muestra los últimos puestos publicados.
 
 import { useEffect, useState } from 'react';
 import SectionTitle from '../../components/SectionTitle';
@@ -37,44 +36,8 @@ function HomePage({ sesion, onNavegar, onMensaje }: Props) {
 
   return (
     <>
-      {/* Sección de tarjetas de acción: Empresas, Oferentes, Puestos */}
-      <section className="container py-5">
-        <div className="row g-4">
-          <div className="col-md-4">
-            <div className="card shadow-sm border-0 h-100 feature-card">
-              <div className="card-body text-center py-4">
-                <h3 className="h5 fw-bold mt-3">Empresas</h3>
-                <p className="text-secondary mb-3">Registrá tu empresa y publicá puestos para encontrar el talento que necesitás.</p>
-                {!logueado && <button className="btn btn-outline-primary" onClick={() => onNavegar('/registro/empresa')}>Registrar empresa</button>}
-                {logueado && <button className="btn btn-outline-secondary" disabled>Registrar empresa</button>}
-              </div>
-            </div>
-          </div>
-          <div className="col-md-4">
-            <div className="card shadow-sm border-0 h-100 feature-card">
-              <div className="card-body text-center py-4">
-                <h3 className="h5 fw-bold mt-3">Oferentes</h3>
-                <p className="text-secondary mb-3">Creá tu perfil, agregá tus habilidades y explorá las oportunidades disponibles.</p>
-                {!logueado && <button className="btn btn-outline-primary" onClick={() => onNavegar('/registro/oferente')}>Registrar oferente</button>}
-                {logueado && <button className="btn btn-outline-secondary" disabled>Registrar oferente</button>}
-              </div>
-            </div>
-          </div>
-          <div className="col-md-4">
-            <div className="card shadow-sm border-0 h-100 feature-card">
-              <div className="card-body text-center py-4">
-                <h3 className="h5 fw-bold mt-3">Puestos</h3>
-                <p className="text-secondary mb-3">Explorá todas las ofertas laborales activas publicadas por empresas registradas.</p>
-                {!logueado && <button className="btn btn-outline-primary" onClick={() => onNavegar('/puestos/buscar')}>Ver puestos</button>}
-                {logueado && <button className="btn btn-outline-secondary" disabled>Ver puestos</button>}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Sección de últimos puestos publicados */}
-      <section className="container pb-5">
+      <section className="container py-5">
         <SectionTitle
           eyebrow="Últimas ofertas"
           title="Puestos recientes"

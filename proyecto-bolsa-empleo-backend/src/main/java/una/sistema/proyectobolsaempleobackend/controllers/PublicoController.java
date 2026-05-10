@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-// Controller REST para endpoints publicos.
+// Controller para endpoints publicos.
 // Proporciona acceso a puestos publicos sin necesidad de autenticacion.
 // Incluye busqueda, detalle de puestos, nacionalidades y caracteristicas.
 @RestController
@@ -20,7 +20,6 @@ public class PublicoController {
     @Autowired
     private ModeloDatos modeloDatos;
 
-    // GET /api/publico/puestos
     // Retorna todos los puestos publicos activos.
     // Incluye las caracteristicas de cada puesto y el tipo de cambio.
     @GetMapping("/puestos")
@@ -31,7 +30,6 @@ public class PublicoController {
         return ResponseEntity.ok(resp);
     }
 
-    // GET /api/publico/puestos/ultimos
     // Retorna los ultimos 5 puestos publicos ordenados por fecha de publicacion.
     @GetMapping("/puestos/ultimos")
     public ResponseEntity<?> ultimosPuestosPublicos() {
@@ -41,7 +39,6 @@ public class PublicoController {
         return ResponseEntity.ok(resp);
     }
 
-    // GET /api/publico/puestos/buscar
     // Busca puestos publicos que contengan alguna de las caracteristicas especificadas.
     // Retorna puestos enriquecidos con sus caracteristicas.
     @GetMapping("/puestos/buscar")
@@ -70,7 +67,6 @@ public class PublicoController {
         return ResponseEntity.ok(resp);
     }
 
-    // GET /api/publico/puestos/{id}
     // Retorna el detalle de un puesto publico especifico.
     // Debe estar activo y ser de tipo "publico".
     @GetMapping("/puestos/{id}")
@@ -88,7 +84,6 @@ public class PublicoController {
         return ResponseEntity.ok(resp);
     }
 
-    // GET /api/publico/nacionalidades
     // Retorna todas las nacionalidades disponibles.
     // Usado para el formulario de registro de oferentes.
     @GetMapping("/nacionalidades")
@@ -96,7 +91,6 @@ public class PublicoController {
         return ResponseEntity.ok(modeloDatos.getNacionalidadService().findAll());
     }
 
-    // GET /api/publico/caracteristicas
     // Retorna las caracteristicas raiz o los hijos de una padre especifico.
     // Se usa para construir el arbol de seleccion en el frontend.
     @GetMapping("/caracteristicas")

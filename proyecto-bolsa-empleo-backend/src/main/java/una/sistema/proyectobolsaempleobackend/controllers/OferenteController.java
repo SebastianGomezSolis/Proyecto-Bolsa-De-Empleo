@@ -1,9 +1,5 @@
 package una.sistema.proyectobolsaempleobackend.controllers;
 
-// Controller REST para la gestion de oferentes (candidatos求职者として).
-// Proporciona endpoints para perfil, habilidades, busqueda de puestos
-// y subida de curriculum (CV).
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +17,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-// Controller REST con prefijo de URL "/api/oferente"
+// Controller para la gestion de oferentes.
+// Proporciona endpoints para perfil, habilidades, busqueda de puestos y subida de curriculum (CV).
 @RestController
 @RequestMapping("/api/oferente")
 public class OferenteController {
@@ -33,7 +30,6 @@ public class OferenteController {
     @Autowired
     private SesionUsuarioBean sesionUsuarioBean;
 
-    // GET /api/oferente/perfil
     // Retorna los datos del perfil del oferente logueado.
     @GetMapping("/perfil")
     public ResponseEntity<?> perfil() {
@@ -43,7 +39,6 @@ public class OferenteController {
         return ResponseEntity.ok(oferente);
     }
 
-    // GET /api/oferente/habilidades
     // Retorna todas las habilidades registradas por el oferente logueado.
     @GetMapping("/habilidades")
     public ResponseEntity<?> habilidades() {
@@ -52,7 +47,6 @@ public class OferenteController {
                 modeloDatos.getHabilidadService().findByOferente(sesionUsuarioBean.getReferenciaId()));
     }
 
-    // POST /api/oferente/habilidades
     // Agrega una nueva habilidad al perfil del oferente.
     // Valida que la caracteristica sea una hoja y que no este duplicada.
     @PostMapping("/habilidades")
@@ -101,7 +95,6 @@ public class OferenteController {
         return ResponseEntity.ok("Habilidad agregada");
     }
 
-    // DELETE /api/oferente/habilidades/{id}
     // Elimina una habilidad del perfil del oferente.
     // Verifica que la habilidad pertenezca al oferente logueado.
     @DeleteMapping("/habilidades/{id}")
@@ -119,7 +112,6 @@ public class OferenteController {
         return ResponseEntity.ok("Habilidad eliminada");
     }
 
-    // GET /api/oferente/caracteristicas
     // Retorna el arbol de caracteristicas navegable para que el oferente
     // seleccione habilidades. Solo incluye hojas en los niveles bajos.
     @GetMapping("/caracteristicas")
@@ -139,7 +131,6 @@ public class OferenteController {
         return ResponseEntity.ok(resp);
     }
 
-    // GET /api/oferente/puestos/buscar
     // Busca puestos (publicos y privados) que coincidan con las caracteristicas seleccionadas.
     // Retorna los puestos enriquecidos con sus datos y el tipo de cambio.
     @SuppressWarnings("unchecked")
@@ -164,7 +155,6 @@ public class OferenteController {
         return ResponseEntity.ok(resp);
     }
 
-    // GET /api/oferente/puestos/{id}
     // Retorna el detalle completo de un puesto especifico.
     @GetMapping("/puestos/{id}")
     public ResponseEntity<?> detallePuesto(@PathVariable Integer id) {
@@ -183,7 +173,6 @@ public class OferenteController {
         return ResponseEntity.ok(resp);
     }
 
-    // POST /api/oferente/cv/subir
     // Sube el curriculum (CV) del oferente en formato PDF.
     // El archivo se guarda en uploads/curriculos del frontend.
     @PostMapping("/cv/subir")

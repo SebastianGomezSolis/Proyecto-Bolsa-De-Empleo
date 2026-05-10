@@ -9,21 +9,11 @@ import org.springframework.web.context.annotation.SessionScope;
 @Component
 @SessionScope
 public class SesionUsuarioBean {
-    // ID unico del usuario en la sesion
     private Integer id;
-
-    // Correo electronico del usuario
     private String correo;
-
-    // Rol del usuario (ADMIN, EMPRESA u OFERENTE)
     private Rol rol;
-
-    // ID de referencia que vincula al usuario con su entidad especifica
-    // (Administrador.id, Empresa.id u Oferente.id)
     private Integer referenciaId;
 
-    // Metodo para inicializar la sesion con los datos del usuario que inicia sesion.
-    // Recibe el ID del usuario, correo, rol y el ID de referencia correspondiente.
     public void login(Integer id, String correo, Rol rol, Integer referenciaId) {
         this.id = id;
         this.correo = correo;
@@ -31,7 +21,6 @@ public class SesionUsuarioBean {
         this.referenciaId = referenciaId;
     }
 
-    // Metodo para cerrar la sesion, limpiando todos los datos del usuario.
     public void logout() {
         id = null;
         correo = null;

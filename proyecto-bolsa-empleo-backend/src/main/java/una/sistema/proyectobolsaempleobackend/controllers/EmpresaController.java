@@ -21,7 +21,7 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
-// Controller REST para la gestion de empresas.
+// Controller para la gestion de empresas.
 // Proporciona endpoints para perfil de empresa, creacion y gestion de puestos,
 // visualizacion de candidatos y descarga de CVs.
 @RestController

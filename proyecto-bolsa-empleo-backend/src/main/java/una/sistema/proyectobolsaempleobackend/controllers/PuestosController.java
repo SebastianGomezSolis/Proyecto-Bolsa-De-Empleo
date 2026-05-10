@@ -12,7 +12,7 @@ import una.sistema.proyectobolsaempleobackend.logic.model.Puesto;
 import java.util.List;
 import java.util.Map;
 
-// Controller REST para busqueda publica de puestos.
+// Controller para busqueda publica de puestos.
 // Proporciona un endpoint para buscar puestos publicos por caracteristicas
 // sin necesidad de autenticacion.
 @RestController
@@ -22,7 +22,6 @@ public class PuestosController {
     @Autowired
     private ModeloDatos modeloDatos;
 
-    // GET /api/puestos/buscar
     // Busca puestos publicos activos que contengan alguna de las caracteristicas especificadas.
     // Retorna los puestos con sus caracteristicas, las raices del arbol y el tipo de cambio.
     @GetMapping("/puestos/buscar")

@@ -13,7 +13,7 @@ import una.sistema.proyectobolsaempleobackend.logic.model.*;
 
 import java.util.Map;
 
-// Controller REST para la autenticacion de usuarios.
+// Controller para la autenticacion de usuarios.
 // Proporciona endpoints para login, logout, registro de empresas y oferentes,
 // y consulta del estado de la sesion actual.
 @RestController
@@ -27,7 +27,6 @@ public class AuthController {
     @Autowired
     private SesionUsuarioBean sesionUsuarioBean;
 
-    // POST /api/auth/login
     // Autentica a un usuario con correo y contrasena.
     // Retorna un LoginResponse con token JWT si las credenciales son validas.
     @PostMapping("/login")
@@ -40,7 +39,6 @@ public class AuthController {
         return ResponseEntity.ok(respuesta);
     }
 
-    // POST /api/auth/logout
     // Cierra la sesion del usuario actual.
     // Limpia el bean de sesion y retorna confirmacion.
     @PostMapping("/logout")
@@ -49,7 +47,6 @@ public class AuthController {
         return ResponseEntity.ok("Sesión cerrada");
     }
 
-    // POST /api/auth/registro/empresa
     // Registra una nueva empresa en el sistema.
     // Las empresas requieren aprobacion de un administrador antes de poder iniciar sesion.
     @PostMapping("/registro/empresa")
@@ -73,7 +70,6 @@ public class AuthController {
         return ResponseEntity.ok("Registro exitoso. Espere la aprobación del administrador.");
     }
 
-    // POST /api/auth/registro/oferente
     // Registra un nuevo oferente (candidato) en el sistema.
     // Los oferentes requieren aprobacion de un administrador antes de poder iniciar sesion.
     @PostMapping("/registro/oferente")
@@ -103,7 +99,6 @@ public class AuthController {
         return ResponseEntity.ok("Registro exitoso. Espere la aprobación del administrador.");
     }
 
-    // GET /api/auth/sesion
     // Retorna la informacion del usuario actualmente logueado.
     // Se usa para verificar estado de sesion en el frontend.
     @GetMapping("/sesion")

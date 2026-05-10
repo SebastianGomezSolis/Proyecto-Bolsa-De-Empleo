@@ -14,11 +14,9 @@ import una.sistema.proyectobolsaempleobackend.logic.servicios.AdministradorServi
 // Esto asegura que siempre haya un administrador para gestionar el sistema.
 @Component
 public class DataInitializer implements CommandLineRunner {
-    // Repositorio para verificar si el correo del administrador ya existe
     @Autowired
     private UsuarioRepository usuarioRepository;
 
-    // Servicio para crear administradores
     @Autowired
     private AdministradorService administradorService;
 

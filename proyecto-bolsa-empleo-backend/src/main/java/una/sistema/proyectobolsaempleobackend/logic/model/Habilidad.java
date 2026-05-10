@@ -12,25 +12,18 @@ import lombok.Setter;
 @Getter
 @Setter
 public class Habilidad {
-    // Clave primaria unica de la habilidad
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    // Relacion muchos a uno con la entidad Oferente.
-    // Indica a que oferente pertenece esta habilidad.
     @ManyToOne
     @JoinColumn(name = "oferente_id", nullable = false)
     private Oferente oferente;
 
-    // Relacion muchos a uno con la entidad Caracteristica (debe ser hoja).
-    // Indica la habilidad o competencia especifica.
     @ManyToOne
     @JoinColumn(name = "caracteristica_id", nullable = false)
     private Caracteristica caracteristica;
 
-    // Nivel de dominio de la habilidad, en una escala de 1 a 5.
-    // 1 = Basico, 3 = Intermedio, 5 = Experto
     @Column(nullable = false)
     private Integer nivel;
 }

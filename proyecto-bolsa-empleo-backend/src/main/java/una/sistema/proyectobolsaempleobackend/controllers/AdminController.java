@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-// Controller REST para la gestion de funciones administrativas.
+// Controller para la gestion de funciones administrativas.
 // Proporciona endpoints para aprobar empresas y oferentes pendientes,
 // administrar caracteristicas (arbol jerarquico), y generar reportes PDF.
 @RestController
@@ -29,7 +29,6 @@ public class AdminController {
     @Autowired
     private SesionUsuarioBean sesionUsuarioBean;
 
-    // GET /api/admin/empresas/pendientes
     // Retorna la lista de empresas que estan pendientes de autorizacion.
     // Solo accesible para usuarios con rol ADMIN.
     @GetMapping("/empresas/pendientes")
@@ -38,7 +37,6 @@ public class AdminController {
         return ResponseEntity.ok(modeloDatos.getEmpresaService().findPendientes());
     }
 
-    // POST /api/admin/empresas/{id}/autorizar
     // Autoriza a una empresa para que pueda usar el sistema.
     // Activa su usuario y marca la empresa como autorizada.
     @PostMapping("/empresas/{id}/autorizar")
@@ -49,7 +47,6 @@ public class AdminController {
         return ResponseEntity.ok("Empresa autorizada");
     }
 
-    // GET /api/admin/oferentes/pendientes
     // Retorna la lista de oferentes pendientes de autorizacion.
     // Solo accesible para usuarios con rol ADMIN.
     @GetMapping("/oferentes/pendientes")
@@ -58,7 +55,6 @@ public class AdminController {
         return ResponseEntity.ok(modeloDatos.getOferenteService().findPendientes());
     }
 
-    // POST /api/admin/oferentes/{id}/autorizar
     // Autoriza a un oferente para que pueda usar el sistema.
     // Activa su usuario y marca el oferente como autorizado.
     @PostMapping("/oferentes/{id}/autorizar")
@@ -69,7 +65,6 @@ public class AdminController {
         return ResponseEntity.ok("Oferente autorizado");
     }
 
-    // GET /api/admin/caracteristicas
     // Retorna el arbol de caracteristicas navegable.
     // Si no se pasa actualId, retorna las raices.
     // Si se pasa actualId, retorna los hijos de esa caracteristica.
@@ -107,7 +102,6 @@ public class AdminController {
         return ResponseEntity.ok(resp);
     }
 
-    // POST /api/admin/caracteristicas
     // Crea una nueva caracteristica en el arbol.
     // Valida que no exista otra con el mismo nombre en el mismo nivel.
     @PostMapping("/caracteristicas")
@@ -145,7 +139,6 @@ public class AdminController {
         return ResponseEntity.ok("Característica creada");
     }
 
-    // GET /api/admin/reportes/pdf
     // Genera un reporte PDF con los puestos publicados en un mes y ano especifico.
     // Retorna el archivo PDF con headers apropiados para descarga.
     @GetMapping("/reportes/pdf")
