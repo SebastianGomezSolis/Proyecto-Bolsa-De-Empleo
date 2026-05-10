@@ -1,11 +1,22 @@
+// Componente del banner global que se muestra en la parte superior de ciertas páginas.
+// Muestra un mensaje promocional o informativo específico según la ruta actual,
+// con un título, descripción y botón de acción contextual.
+
 interface BannerConfig {
+  // Texto pequeño que aparece arriba del título (ej: "Bolsa de Empleo")
   eyebrow: string;
+  // Título principal del banner
   title: string;
+  // Descripción o subtítulo explicativo
   description: string;
+  // Texto del botón de acción
   buttonLabel: string;
+  // Ruta a la que dirige el botón al hacer clic
   buttonRoute: string;
 }
 
+// Configuración de banners para cada ruta específica del aplicativo.
+// Cada entrada define el contenido que se mostrará en ese camino.
 const bannerConfig: Record<string, BannerConfig> = {
   '/': {
     eyebrow: 'Bolsa de Empleo',
@@ -129,21 +140,28 @@ const bannerConfig: Record<string, BannerConfig> = {
 };
 
 interface Props {
+  // Ruta actual del aplicativo (usada para buscar la configuración correspondiente)
   ruta: string;
+  // Función de navegación para redirigir al usuario al hacer clic en el botón
   onNavegar: (ruta: string) => void;
 }
 
 function GlobalBanner({ ruta, onNavegar }: Props) {
+  // Obtener la configuración para la ruta actual, o usar la de '/' como fallback
   const config = bannerConfig[ruta] || bannerConfig['/'];
 
   return (
     <section className="global-banner text-white">
+      {/* Overlay oscuro para mejorar la legibilidad del texto */}
       <div className="banner-overlay">
         <div className="container py-5">
           <div className="row align-items-center g-4">
             <div className="col-lg-8">
+              {/* Eyebrow: texto pequeño en mayúsculas y color primario */}
               <div className="text-primary fw-semibold text-uppercase mb-2" style={{ fontSize: '0.85rem' }}>{config.eyebrow}</div>
+              {/* Título principal: grande y en negrita */}
               <h1 className="display-5 fw-bold mb-3">{config.title}</h1>
+              {/* Descripción: texto lead (ligeramente más grande que el normal) */}
               <p className="lead mb-4 banner-copy">{config.description}</p>
             </div>
           </div>

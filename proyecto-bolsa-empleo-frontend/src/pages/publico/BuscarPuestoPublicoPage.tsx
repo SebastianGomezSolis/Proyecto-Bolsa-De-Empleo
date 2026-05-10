@@ -1,11 +1,15 @@
+// Página pública de búsqueda de puestos. Permite filtrar ofertas laborales
+// mediante un árbol jerárquico de características (categorías).
+
 import { useEffect, useState } from 'react';
 import SectionTitle from '../../components/SectionTitle';
 import LoadingBlock from '../../components/LoadingBlock';
 import SelectorCaracteristicas from '../../components/SelectorCaracteristicas';
 import ResultadosPuesto from '../../components/ResultadosPuesto';
 import { api } from '../../services/api';
-import { MensajeGlobal, Caracteristica, Puesto, PuestosResponse } from '../../types';
+import { MensajeGlobal, Caracteristica, Puesto } from '../../types';
 
+// Función recursiva para cargar el árbol completo de características desde el backend
 async function cargarArbolCompleto(padreId: number | null = null): Promise<Caracteristica[]> {
   const nodos = padreId ? await api.getCaracteristicasHijos(padreId) : await api.getCaracteristicasRaiz();
   return Promise.all(
@@ -17,16 +21,23 @@ async function cargarArbolCompleto(padreId: number | null = null): Promise<Carac
 }
 
 interface Props {
+  // Función de callback para mostrar mensajes globales (éxito/error)
   onMensaje: (m: MensajeGlobal) => void;
 }
 
 function BuscarPuestoPublicoPage({ onMensaje }: Props) {
+  // Estado para almacenar las raíces del árbol de características
   const [raices, setRaices] = useState<Caracteristica[]>([]);
+  // Estado para almacenar los IDs de características seleccionadas como filtro
   const [seleccionados, setSeleccionados] = useState<number[]>([]);
+  // Estado para almacenar los resultados de la búsqueda (null = aún no se buscó)
   const [puestos, setPuestos] = useState<Puesto[] | null>(null);
+  // Estado para indicar si se está cargando el árbol de características
   const [cargando, setCargando] = useState(true);
+  // Estado para indicar si se está ejecutando una búsqueda
   const [buscando, setBuscando] = useState(false);
 
+  // Effect que carga el árbol completo de características al montar el componente
   useEffect(() => {
     cargarArbolCompleto(null)
       .then(setRaices)
@@ -34,9 +45,11 @@ function BuscarPuestoPublicoPage({ onMensaje }: Props) {
       .finally(() => setCargando(false));
   }, [onMensaje]);
 
+  // Alterna la selección de una característica (agregar o quitar del filtro)
   const toggleSeleccion = (id: number) =>
     setSeleccionados((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
 
+  // Manejador de la búsqueda: envía las características seleccionadas al backend
   const buscar = async (e: React.FormEvent) => {
     e.preventDefault();
     setBuscando(true);
@@ -50,9 +63,11 @@ function BuscarPuestoPublicoPage({ onMensaje }: Props) {
     }
   };
 
+  // Limpia los filtros seleccionados y los resultados de búsqueda
   const limpiar = () => { setSeleccionados([]); setPuestos(null); };
 
   return (
+    // Render del formulario de búsqueda y los resultados
     <section className="container py-5">
       <SectionTitle eyebrow="Búsqueda" title="Buscar puestos" description="Filtrá por características para encontrar puestos disponibles." />
 

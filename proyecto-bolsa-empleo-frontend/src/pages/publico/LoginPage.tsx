@@ -1,3 +1,6 @@
+// Página de inicio de sesión. Permite a los usuarios autenticarse con correo
+// y contraseña, con opción de recordar credenciales en localStorage.
+
 import { useState } from 'react';
 import SectionTitle from '../../components/SectionTitle';
 import { api } from '../../services/api';
@@ -5,23 +8,31 @@ import { guardarSesion } from '../../services/authService';
 import { MensajeGlobal, Sesion } from '../../types';
 
 interface Props {
+  // Función para actualizar la sesión global al iniciar sesión exitosamente
   onSesion: (s: Sesion) => void;
+  // Función de navegación para redirigir al usuario a otras páginas
   onNavegar: (ruta: string) => void;
+  // Función de callback para mostrar mensajes globales (éxito/error)
   onMensaje: (m: MensajeGlobal) => void;
 }
 
 function LoginPage({ onSesion, onNavegar, onMensaje }: Props) {
+  // Estado del formulario: correo y clave (inicializados desde localStorage si se recordaron)
   const [form, setForm] = useState({
     correo: localStorage.getItem('bolsa.correo') ?? '',
     clave: localStorage.getItem('bolsa.clave') ?? '',
   });
+  // Estado para recordar credenciales (checkbox)
   const [recordar, setRecordar] = useState(
     () => localStorage.getItem('bolsa.recordar') === 'true'
   );
+  // Estado para indicar si se está procesando el inicio de sesión
   const [cargando, setCargando] = useState(false);
 
+  // Función auxiliar para actualizar un campo específico del formulario
   const set = (campo: string, valor: string) => setForm((prev) => ({ ...prev, [campo]: valor }));
 
+  // Manejador del envío del formulario de login
   const manejarLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setCargando(true);
@@ -51,6 +62,7 @@ function LoginPage({ onSesion, onNavegar, onMensaje }: Props) {
   };
 
   return (
+    // Render del formulario de inicio de sesión
     <section className="container py-5">
       <div className="row justify-content-center">
         <div className="col-lg-5 col-xl-4">
@@ -103,7 +115,7 @@ function LoginPage({ onSesion, onNavegar, onMensaje }: Props) {
               <hr className="my-4" />
               <p className="text-center mb-0 small">
                 ¿No tenés cuenta?{' '}
-                <button className="btn btn-link p-0 small" onClick={() => onNavegar('/registro')}>
+                <button className="btn btn-link p-0 small" onClick={() => onNavegar('/registro/empresa')}>
                   Registrate aquí
                 </button>
               </p>

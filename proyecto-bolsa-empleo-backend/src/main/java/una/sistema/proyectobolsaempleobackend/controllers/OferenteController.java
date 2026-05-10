@@ -1,5 +1,9 @@
 package una.sistema.proyectobolsaempleobackend.controllers;
 
+// Controller REST para la gestion de oferentes (candidatos求职者として).
+// Proporciona endpoints para perfil, habilidades, busqueda de puestos
+// y subida de curriculum (CV).
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,16 +21,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+// Controller REST con prefijo de URL "/api/oferente"
 @RestController
 @RequestMapping("/api/oferente")
 public class OferenteController {
+    // Acceso centralizado a todos los servicios
     @Autowired
     private ModeloDatos modeloDatos;
 
+    // Bean de sesion para verificar permisos
     @Autowired
     private SesionUsuarioBean sesionUsuarioBean;
 
-    // ─── Perfil ────────────────────────────────────────────────────────────
+    // GET /api/oferente/perfil
+    // Retorna los datos del perfil del oferente logueado.
     @GetMapping("/perfil")
     public ResponseEntity<?> perfil() {
         if (!sesionUsuarioBean.isOferente()) return forbidden();
@@ -35,7 +43,8 @@ public class OferenteController {
         return ResponseEntity.ok(oferente);
     }
 
-    // ─── Habilidades ───────────────────────────────────────────────────────
+    // GET /api/oferente/habilidades
+    // Retorna todas las habilidades registradas por el oferente logueado.
     @GetMapping("/habilidades")
     public ResponseEntity<?> habilidades() {
         if (!sesionUsuarioBean.isOferente()) return forbidden();
@@ -43,6 +52,9 @@ public class OferenteController {
                 modeloDatos.getHabilidadService().findByOferente(sesionUsuarioBean.getReferenciaId()));
     }
 
+    // POST /api/oferente/habilidades
+    // Agrega una nueva habilidad al perfil del oferente.
+    // Valida que la caracteristica sea una hoja y que no este duplicada.
     @PostMapping("/habilidades")
     public ResponseEntity<?> agregarHabilidad(@RequestBody Map<String, Object> body) {
         if (!sesionUsuarioBean.isOferente()) return forbidden();
@@ -50,31 +62,37 @@ public class OferenteController {
         Integer caracteristicaId = (Integer) body.get("caracteristicaId");
         Integer nivel = (Integer) body.get("nivel");
 
+        // Validar datos basicos
         if (caracteristicaId == null || nivel == null)
             return ResponseEntity.badRequest().body("Datos incompletos");
         if (nivel < 1 || nivel > 5)
             return ResponseEntity.badRequest().body("El nivel debe ser entre 1 y 5");
 
+        // Validar que la caracteristica exista
         Caracteristica caracteristica = modeloDatos.getCaracteristicaService().findById(caracteristicaId);
         if (caracteristica == null)
-            return ResponseEntity.badRequest().body("Caracter\u00edstica no encontrada");
+            return ResponseEntity.badRequest().body("Característica no encontrada");
 
+        // Validar que sea una hoja (caracteristica final)
         if (!modeloDatos.getCaracteristicaService().isHoja(caracteristicaId))
             return ResponseEntity.badRequest().body("Solo se pueden registrar habilidades de nivel hoja");
 
+        // Obtener el oferente
         Oferente oferente = modeloDatos.getOferenteService().findById(sesionUsuarioBean.getReferenciaId());
         if (oferente == null)
             return ResponseEntity.badRequest().body("Oferente no encontrado");
 
+        // Validar que no este duplicada la habilidad
         List<Habilidad> existentes = modeloDatos.getHabilidadService()
                 .findByOferente(sesionUsuarioBean.getReferenciaId());
         for (Habilidad h : existentes) {
             if (h.getCaracteristica() != null && h.getCaracteristica().getId().equals(caracteristicaId)) {
                 return ResponseEntity.badRequest()
-                        .body("La habilidad \"" + caracteristica.getNombre() + "\" ya est\u00e1 registrada");
+                        .body("La habilidad \"" + caracteristica.getNombre() + "\" ya está registrada");
             }
         }
 
+        // Crear y guardar la habilidad
         Habilidad habilidad = new Habilidad();
         habilidad.setOferente(oferente);
         habilidad.setCaracteristica(caracteristica);
@@ -83,6 +101,9 @@ public class OferenteController {
         return ResponseEntity.ok("Habilidad agregada");
     }
 
+    // DELETE /api/oferente/habilidades/{id}
+    // Elimina una habilidad del perfil del oferente.
+    // Verifica que la habilidad pertenezca al oferente logueado.
     @DeleteMapping("/habilidades/{id}")
     public ResponseEntity<?> eliminarHabilidad(@PathVariable Integer id) {
         if (!sesionUsuarioBean.isOferente()) return forbidden();
@@ -90,6 +111,7 @@ public class OferenteController {
         Habilidad habilidad = modeloDatos.getHabilidadService().findById(id);
         if (habilidad == null) return ResponseEntity.notFound().build();
 
+        // Verificar propiedad de la habilidad
         if (!habilidad.getOferente().getId().equals(sesionUsuarioBean.getReferenciaId()))
             return forbidden();
 
@@ -97,7 +119,9 @@ public class OferenteController {
         return ResponseEntity.ok("Habilidad eliminada");
     }
 
-    // ─── Arbol de caracteristicas ──────────────────────────────────────────
+    // GET /api/oferente/caracteristicas
+    // Retorna el arbol de caracteristicas navegable para que el oferente
+    // seleccione habilidades. Solo incluye hojas en los niveles bajos.
     @GetMapping("/caracteristicas")
     public ResponseEntity<?> caracteristicas(@RequestParam(required = false) Integer actualId) {
         if (!sesionUsuarioBean.isOferente()) return forbidden();
@@ -115,7 +139,9 @@ public class OferenteController {
         return ResponseEntity.ok(resp);
     }
 
-    // ─── Busqueda de puestos ───────────────────────────────────────────────
+    // GET /api/oferente/puestos/buscar
+    // Busca puestos (publicos y privados) que coincidan con las caracteristicas seleccionadas.
+    // Retorna los puestos enriquecidos con sus datos y el tipo de cambio.
     @SuppressWarnings("unchecked")
     @GetMapping("/puestos/buscar")
     public ResponseEntity<?> buscarPorCaracteristicas(
@@ -129,6 +155,7 @@ public class OferenteController {
             puestos = (List<Puesto>) modeloDatos.getPuestoService().findActivosAmbostiposPorCaracteristicas(caracteristicaIds);
         }
 
+        // Construir respuesta con puestos, raices del arbol, tipo de cambio y filtros activos
         Map<String, Object> resp = new HashMap<>();
         resp.put("puestos", enriquecerPuestos(puestos));
         resp.put("raices", modeloDatos.getCaracteristicaService().findRaices());
@@ -137,7 +164,8 @@ public class OferenteController {
         return ResponseEntity.ok(resp);
     }
 
-    // ─── Detalle de puesto ──────────────────────────────────────────────────
+    // GET /api/oferente/puestos/{id}
+    // Retorna el detalle completo de un puesto especifico.
     @GetMapping("/puestos/{id}")
     public ResponseEntity<?> detallePuesto(@PathVariable Integer id) {
         if (!sesionUsuarioBean.isOferente()) return forbidden();
@@ -146,6 +174,7 @@ public class OferenteController {
         if (puesto == null || !puesto.getActivo())
             return ResponseEntity.notFound().build();
 
+        // Cargar caracteristicas del puesto
         puesto.setCaracteristicas(modeloDatos.getPuestoCaracteristicaService().findByPuesto(id));
 
         Map<String, Object> resp = new HashMap<>();
@@ -154,14 +183,18 @@ public class OferenteController {
         return ResponseEntity.ok(resp);
     }
 
-    // ─── Curriculum (CV) ───────────────────────────────────────────────────
+    // POST /api/oferente/cv/subir
+    // Sube el curriculum (CV) del oferente en formato PDF.
+    // El archivo se guarda en uploads/curriculos del frontend.
     @PostMapping("/cv/subir")
     public ResponseEntity<?> subirCv(@RequestParam("archivo") MultipartFile archivo) {
         if (!sesionUsuarioBean.isOferente()) return forbidden();
 
+        // Validar que se haya enviado un archivo
         if (archivo == null || archivo.isEmpty())
             return ResponseEntity.badRequest().body("Debe seleccionar un archivo PDF");
 
+        // Validar que sea PDF
         String nombreArchivo = archivo.getOriginalFilename();
         if (nombreArchivo == null || !nombreArchivo.toLowerCase().endsWith(".pdf"))
             return ResponseEntity.badRequest().body("Solo se permiten archivos PDF");
@@ -170,18 +203,23 @@ public class OferenteController {
         if (oferente == null) return ResponseEntity.badRequest().body("Oferente no encontrado");
 
         try {
+            // Crear directorio si no existe
             Path directorio = buscarDirPublicFrontend().resolve("uploads/curriculos");
             Files.createDirectories(directorio);
 
+            // Nombre del archivo basado en identificacion del oferente
             String idSanitizado = oferente.getIdentificacion().replaceAll("[^a-zA-Z0-9_-]", "_");
             File destino = new File(directorio.toFile(), idSanitizado + ".pdf");
 
+            // Validar ruta de destino para seguridad
             String canonicalDir = directorio.toFile().getCanonicalPath() + File.separator;
             if (!destino.getCanonicalPath().startsWith(canonicalDir))
                 return ResponseEntity.badRequest().body("Ruta de archivo no permitida");
 
+            // Guardar archivo
             archivo.transferTo(destino);
 
+            // Guardar ruta relativa en la base de datos
             String rutaRelativa = "uploads/curriculos/" + idSanitizado + ".pdf";
             modeloDatos.getOferenteService()
                     .actualizarCurriculum(sesionUsuarioBean.getReferenciaId(), rutaRelativa);
@@ -193,13 +231,14 @@ public class OferenteController {
         }
     }
 
-    // ─── Utilidades ────────────────────────────────────────────────────────
+    // Agrega las caracteristicas a cada puesto para enviar al frontend
     private List<Puesto> enriquecerPuestos(List<Puesto> puestos) {
         puestos.forEach(p -> p.setCaracteristicas(
                 modeloDatos.getPuestoCaracteristicaService().findByPuesto(p.getId())));
         return puestos;
     }
 
+    // Obtiene el tipo de cambio del dolar, manejando errores gracefully
     private Object obtenerTipoCambio() {
         try {
             return modeloDatos.getTipoCambioServicio().obtenerTipoCambio();
@@ -208,10 +247,12 @@ public class OferenteController {
         }
     }
 
+    // Retorna respuesta 403 Forbidden
     private ResponseEntity<?> forbidden() {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acceso denegado");
     }
 
+    // Busca recursivamente el directorio public del proyecto frontend
     private Path buscarDirPublicFrontend() {
         String nombreCarpeta = "proyecto-bolsa-empleo-frontend";
         Path actual = Paths.get("").toAbsolutePath().normalize();

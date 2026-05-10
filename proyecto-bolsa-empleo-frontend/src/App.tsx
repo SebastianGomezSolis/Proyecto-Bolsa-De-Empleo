@@ -25,17 +25,20 @@ import OferenteCVPage from './pages/oferente/OferenteCVPage';
 import { obtenerSesionGuardada, limpiarSesion } from './services/authService';
 import { MensajeGlobal, Sesion } from './types';
 
+// Obtiene la ruta actual del hash del navegador, limpiando el prefijo '#'
 function obtenerRuta(): string {
   const hash = window.location.hash || '#/';
   const ruta = hash.replace('#', '');
   return ruta.startsWith('/') ? ruta : `/${ruta}`;
 }
 
+// Representa una ruta ya procesada: base (patrón con :params) y los valores extraídos
 interface RutaParseada {
-  base: string;
-  params: Record<string, string>;
+  base: string;                         // Patrón base de la ruta (ej: /empresa/puestos/:id/candidatos)
+  params: Record<string, string>;       // Diccionario con los valores de los parámetros extraídos
 }
 
+// Analiza la ruta actual y extrae el patrón base junto con los parámetros dinámicos (ej: ids)
 function parsearRuta(ruta: string): RutaParseada {
   const candidatosMatch = ruta.match(/^\/empresa\/puestos\/(\d+)\/candidatos$/);
   if (candidatosMatch) return { base: '/empresa/puestos/:id/candidatos', params: { puestoId: candidatosMatch[1] } };
@@ -52,23 +55,29 @@ function parsearRuta(ruta: string): RutaParseada {
   return { base: ruta, params: {} };
 }
 
+// Rutas públicas que muestran el banner global en la parte superior de la página
 const RUTAS_CON_BANNER = ['/', '/puestos/buscar', '/login', '/registro/empresa', '/registro/oferente'];
 
+// Componente principal de la aplicación. Maneja la navegación basada en hash,
+// el estado global de sesión y los mensajes emergentes, y renderiza la página correspondiente.
 function App() {
-  const [ruta, setRuta] = useState<string>(obtenerRuta);
-  const [sesion, setSesion] = useState<Sesion | null>(obtenerSesionGuardada);
-  const [mensaje, setMensaje] = useState<MensajeGlobal | null>(null);
+  const [ruta, setRuta] = useState<string>(obtenerRuta);           // Ruta hash actual del navegador
+  const [sesion, setSesion] = useState<Sesion | null>(obtenerSesionGuardada);  // Sesión del usuario (null si no ha iniciado)
+  const [mensaje, setMensaje] = useState<MensajeGlobal | null>(null);          // Mensaje global (alerta/info/error)
 
+  // Escucha el evento hashchange del navegador para actualizar la ruta en el estado
   useEffect(() => {
     const handler = () => setRuta(obtenerRuta());
     window.addEventListener('hashchange', handler);
     return () => window.removeEventListener('hashchange', handler);
   }, []);
 
+  // Función memoizada para navegar cambiando el hash del navegador
   const navegar = useCallback((destino: string) => {
     window.location.hash = destino;
   }, []);
 
+  // Limpia la sesión del storage, resetea el estado y redirige al inicio
   function cerrarSesion() {
     limpiarSesion();
     setSesion(null);
@@ -76,8 +85,10 @@ function App() {
     navegar('/');
   }
 
+  // Memoriza el resultado del parseo de la ruta para no recalcularlo en cada render
   const { base, params } = useMemo(() => parsearRuta(ruta), [ruta]);
 
+  // Memoriza el componente de página a renderizar según la ruta base y los parámetros
   const pagina = useMemo(() => {
     switch (base) {
       case '/login':
@@ -121,8 +132,10 @@ function App() {
     }
   }, [base, params, sesion, navegar]);
 
+  // Determina si la ruta actual está entre las que deben mostrar el banner global
   const mostrarBanner = RUTAS_CON_BANNER.includes(ruta);
 
+  // Renderiza el layout principal: header, banner opcional, alertas, contenido dinámico y footer
   return (
     <div className="app-shell bg-body-tertiary min-vh-100 d-flex flex-column">
       <Header sesion={sesion} ruta={ruta} onNavegar={navegar} onLogout={cerrarSesion} />

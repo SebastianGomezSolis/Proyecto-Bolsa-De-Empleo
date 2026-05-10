@@ -5,31 +5,47 @@ import { api } from '../../services/api';
 import { Sesion, MensajeGlobal, Caracteristica, Habilidad } from '../../types';
 
 interface Props {
+  // Sesión actual del usuario (se usa para verificar rol de oferente)
   sesion: Sesion | null;
+  // Función de navegación para redirigir al usuario a otras páginas
   onNavegar: (ruta: string) => void;
+  // Función de callback para mostrar mensajes globales (éxito/error)
   onMensaje: (m: MensajeGlobal) => void;
 }
 
+// Componente principal para gestionar las habilidades del oferente
 function OferenteHabilidadesPage({ sesion, onNavegar, onMensaje }: Props) {
+  // Lista de habilidades ya registradas del oferente
   const [habilidades, setHabilidades] = useState<Habilidad[]>([]);
+  // Subcategorías visibles en la navegación actual
   const [subcategorias, setSubcategorias] = useState<Caracteristica[]>([]);
+  // Ruta de navegación (breadcrumb) dentro del árbol de categorías
   const [ruta, setRuta] = useState<Caracteristica[]>([]);
+  // Nodo (categoría) actualmente seleccionado en la navegación
   const [actual, setActual] = useState<Caracteristica | null>(null);
+  // ID de la característica hoja seleccionada para agregar
   const [selId, setSelId] = useState<number | null>(null);
+  // Nivel (1-5) para la nueva habilidad
   const [nivel, setNivel] = useState(1);
+  // Indicador de carga inicial de datos
   const [cargando, setCargando] = useState(true);
+  // Indicador de navegación en curso entre categorías
   const [navegando, setNavegando] = useState(false);
+  // Conjunto de IDs de características que son hojas (sin hijos)
   const [hojas, setHojas] = useState<Set<number>>(new Set());
 
+  // Recargar la lista de habilidades desde el backend
   const cargarHabilidades = () =>
     api.getHabilidades()
       .then(setHabilidades)
       .catch((e: Error) => onMensaje({ tipo: 'danger', texto: e.message }));
 
+  // Cargar subcategorías de un padre (o raíces si padreId es null)
   const cargarSubcategorias = async (padreId: number | null = null) => {
     try {
       const data = padreId ? await api.getCaracteristicasHijos(padreId) : await api.getCaracteristicasRaiz();
       setSubcategorias(data);
+      // Determinar qué nodos son hojas consultando sus hijos
       const nuevasHojas = new Set(hojas);
       await Promise.all(data.map(async (n) => {
         const hijos = await api.getCaracteristicasHijos(n.id);
@@ -42,6 +58,7 @@ function OferenteHabilidadesPage({ sesion, onNavegar, onMensaje }: Props) {
     }
   };
 
+  // Effect para cargar habilidades y categorías raíz al montar el componente
   useEffect(() => {
     if (!sesion || sesion.rol !== 'OFERENTE') return;
     Promise.all([api.getHabilidades(), api.getCaracteristicasRaiz()])
@@ -50,6 +67,7 @@ function OferenteHabilidadesPage({ sesion, onNavegar, onMensaje }: Props) {
       .finally(() => setCargando(false));
   }, [sesion, onMensaje]);
 
+  // Verificar que el usuario esté autenticado y tenga rol de oferente
   if (!sesion || sesion.rol !== 'OFERENTE') {
     return (
       <section className="container py-5">
@@ -59,6 +77,7 @@ function OferenteHabilidadesPage({ sesion, onNavegar, onMensaje }: Props) {
     );
   }
 
+  // Navegar a una subcategoría (hacia adentro del árbol)
   const entrar = async (sub: Caracteristica) => {
     if (navegando) return;
     setNavegando(true);
@@ -69,6 +88,7 @@ function OferenteHabilidadesPage({ sesion, onNavegar, onMensaje }: Props) {
     setNavegando(false);
   };
 
+  // Volver al nivel raíz del árbol de categorías
   const irARaiz = async () => {
     setActual(null);
     setRuta([]);
@@ -76,6 +96,7 @@ function OferenteHabilidadesPage({ sesion, onNavegar, onMensaje }: Props) {
     await cargarSubcategorias(null);
   };
 
+  // Navegar a un nodo específico del breadcrumb
   const irANodo = async (nodo: Caracteristica, idx: number) => {
     const nuevaRuta = ruta.slice(0, idx + 1);
     setRuta(nuevaRuta);
@@ -84,8 +105,10 @@ function OferenteHabilidadesPage({ sesion, onNavegar, onMensaje }: Props) {
     await cargarSubcategorias(nodo.id);
   };
 
+  // Seleccionar una característica hoja para agregar como habilidad
   const seleccionar = (sub: Caracteristica) => setSelId(sub.id);
 
+  // Agregar una nueva habilidad al oferente
   const agregar = async (e: React.FormEvent) => {
     e.preventDefault();
     const id = selId || actual?.id;
@@ -101,6 +124,7 @@ function OferenteHabilidadesPage({ sesion, onNavegar, onMensaje }: Props) {
     }
   };
 
+  // Eliminar una habilidad del oferente (con confirmación)
   const eliminar = async (id: number) => {
     if (!window.confirm('¿Eliminar esta habilidad?')) return;
     try {
@@ -112,6 +136,7 @@ function OferenteHabilidadesPage({ sesion, onNavegar, onMensaje }: Props) {
     }
   };
 
+  // Verificar si una característica es hoja (no tiene subcategorías)
   const esHoja = (sub: Caracteristica) => hojas.has(sub.id);
 
   return (
@@ -120,6 +145,7 @@ function OferenteHabilidadesPage({ sesion, onNavegar, onMensaje }: Props) {
 
       {cargando ? <LoadingBlock /> : (
         <div className="row g-4">
+          {/* Columna izquierda: tabla de habilidades ya registradas */}
           <div className="col-md-4">
             <table className="table table-hover table-sm">
               <thead>
@@ -141,8 +167,10 @@ function OferenteHabilidadesPage({ sesion, onNavegar, onMensaje }: Props) {
             </table>
           </div>
 
+          {/* Columna central: navegación del árbol de categorías */}
           <div className="col-md-4">
             <div className="mb-2">
+              {/* Breadcrumb de navegación entre categorías */}
               <span className="fw-semibold">Ruta:</span>
               <span className="ms-1">
                 <button className="badge text-bg-secondary text-decoration-none border-0" onClick={irARaiz}>Raíces</button>
@@ -161,6 +189,7 @@ function OferenteHabilidadesPage({ sesion, onNavegar, onMensaje }: Props) {
                 Subcategorías de: <strong>{actual.nombre}</strong>
               </div>
             )}
+            {/* Lista de subcategorías con botón seleccionar/entrar */}
             {subcategorias.map((sub) => (
               <div key={sub.id} className="d-flex justify-content-between align-items-center border rounded px-3 py-2 mb-2 bg-white">
                 <span>{sub.nombre}</span>
@@ -178,6 +207,7 @@ function OferenteHabilidadesPage({ sesion, onNavegar, onMensaje }: Props) {
             )}
           </div>
 
+          {/* Columna derecha: formulario para agregar una nueva habilidad */}
           <div className="col-md-4">
             <div className="border rounded p-3 bg-white">
               <h6 className="fw-bold mb-3">Agregar Habilidad</h6>
@@ -206,4 +236,5 @@ function OferenteHabilidadesPage({ sesion, onNavegar, onMensaje }: Props) {
   );
 }
 
+// Exportar el componente para usarlo en el enrutador
 export default OferenteHabilidadesPage;

@@ -1,3 +1,6 @@
+// Página de administración para generar reportes de puestos publicados.
+// Permite seleccionar mes y año para descargar un PDF con los puestos del período.
+
 import { useState } from 'react';
 import SectionTitle from '../../components/SectionTitle';
 import { API_BASE } from '../../services/api';
@@ -7,14 +10,19 @@ import { Sesion } from '../../types';
 const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
 interface Props {
+  // Sesión actual del usuario (se usa para verificar rol de administrador)
   sesion: Sesion | null;
+  // Función de navegación para redirigir al usuario a otras páginas
   onNavegar: (ruta: string) => void;
 }
 
 function AdminReportesPage({ sesion, onNavegar }: Props) {
+  // Estado para el mes seleccionado en el formulario (valor por defecto: mes actual)
   const [mes, setMes] = useState(new Date().getMonth() + 1);
+  // Estado para el año seleccionado en el formulario (valor por defecto: año actual)
   const [anio, setAnio] = useState(new Date().getFullYear());
 
+  // Redirección para usuarios no autenticados o que no son administradores
   if (!sesion || sesion.rol !== 'ADMIN') {
     return (
       <section className="container py-5">
@@ -24,8 +32,9 @@ function AdminReportesPage({ sesion, onNavegar }: Props) {
     );
   }
 
+  // Manejador del formulario: abre el PDF del reporte en una nueva pestaña
   const verPDF = (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevenir envío tradicional del formulario
     const token = obtenerToken();
     if (!token) return;
     window.open(`${API_BASE}/api/admin/reportes/pdf?mes=${mes}&anio=${anio}&token=${token}`, '_blank');
@@ -35,6 +44,7 @@ function AdminReportesPage({ sesion, onNavegar }: Props) {
     <section className="container py-5">
       <SectionTitle eyebrow="Administración" title="Reportes" description="Generá reportes de puestos publicados por mes y año en formato PDF." />
 
+      {/* Formulario para seleccionar mes y año del reporte */}
       <div className="border rounded p-4 bg-white" style={{ maxWidth: '450px' }}>
         <h6 className="fw-bold mb-3">Reporte de puestos por mes</h6>
         <p className="text-muted mb-3" style={{ fontSize: '0.88rem' }}>

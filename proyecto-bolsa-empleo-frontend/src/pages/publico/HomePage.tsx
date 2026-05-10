@@ -1,3 +1,6 @@
+// Página de inicio pública del sistema. Muestra tarjetas de acción
+// (empresas, oferentes, puestos) y los últimos puestos publicados.
+
 import { useEffect, useState } from 'react';
 import SectionTitle from '../../components/SectionTitle';
 import LoadingBlock from '../../components/LoadingBlock';
@@ -6,16 +9,23 @@ import { api } from '../../services/api';
 import { Sesion, MensajeGlobal, Puesto, PuestosResponse } from '../../types';
 
 interface Props {
+  // Sesión actual del usuario (null si no está autenticado)
   sesion: Sesion | null;
+  // Función de navegación para redirigir al usuario a otras páginas
   onNavegar: (ruta: string) => void;
+  // Función de callback para mostrar mensajes globales (éxito/error)
   onMensaje: (m: MensajeGlobal) => void;
 }
 
 function HomePage({ sesion, onNavegar, onMensaje }: Props) {
+  // Estado para almacenar los últimos puestos publicados
   const [puestos, setPuestos] = useState<Puesto[]>([]);
+  // Estado para indicar si se están cargando los datos desde el backend
   const [cargando, setCargando] = useState(true);
+  // Indica si el usuario tiene una sesión activa
   const logueado = Boolean(sesion);
 
+  // Effect que carga los últimos puestos públicos al montar el componente
   useEffect(() => {
     api.getUltimosPuestosPublicos()
       .then((res: PuestosResponse) => {
@@ -27,6 +37,7 @@ function HomePage({ sesion, onNavegar, onMensaje }: Props) {
 
   return (
     <>
+      {/* Sección de tarjetas de acción: Empresas, Oferentes, Puestos */}
       <section className="container py-5">
         <div className="row g-4">
           <div className="col-md-4">
@@ -62,6 +73,7 @@ function HomePage({ sesion, onNavegar, onMensaje }: Props) {
         </div>
       </section>
 
+      {/* Sección de últimos puestos publicados */}
       <section className="container pb-5">
         <SectionTitle
           eyebrow="Últimas ofertas"

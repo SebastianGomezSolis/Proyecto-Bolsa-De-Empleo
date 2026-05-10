@@ -20,6 +20,8 @@ public class ModeloDatos {
     @Autowired private ReporteService reporteService;
     @Autowired private TipoCambioServicio tipoCambioServicio;
 
+    // Getters para cada servicio inyectado
+
     public AuthService getAuthService(){ return authService; }
     public UsuarioService getUsuarioService() { return usuarioService; }
     public AdministradorService getAdministradorService() { return administradorService; }

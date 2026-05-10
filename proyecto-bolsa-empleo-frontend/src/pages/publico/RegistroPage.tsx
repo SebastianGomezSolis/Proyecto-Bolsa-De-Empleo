@@ -1,36 +1,51 @@
+// Página de registro de usuarios. Permite crear cuentas tanto para empresas
+// como para oferentes, con formularios adaptados según el tipo seleccionado.
+
 import { useEffect, useState } from 'react';
 import { api } from '../../services/api';
 import { MensajeGlobal, Nacionalidad } from '../../types';
 
+// Valores iniciales del formulario para cada tipo de registro
 const FORM_EMPRESA = { correo: '', clave: '', nombre: '', localizacion: '', telefono: '', descripcion: '' };
 const FORM_OFERENTE = { correo: '', clave: '', identificacion: '', nombre: '', primerApellido: '', isoNacionalidad: '', telefono: '', lugarResidencia: '' };
 
 interface Props {
+  // Función de navegación para redirigir al usuario a otras páginas
   onNavegar: (ruta: string) => void;
+  // Función de callback para mostrar mensajes globales (éxito/error)
   onMensaje: (m: MensajeGlobal) => void;
+  // Tipo de registro inicial ('empresa' u 'oferente')
   tipoInicial?: string;
 }
 
 type FormValues = Record<string, string>;
 
 function RegistroPage({ onNavegar, onMensaje, tipoInicial }: Props) {
+  // Estado para el tipo de registro seleccionado (empresa / oferente)
   const [tipo, setTipo] = useState(tipoInicial === 'empresa' ? 'empresa' : 'oferente');
+  // Estado del formulario con valores según el tipo seleccionado
   const [form, setForm] = useState<FormValues>(tipoInicial === 'empresa' ? { ...FORM_EMPRESA } : { ...FORM_OFERENTE });
+  // Estado para la lista de nacionalidades (requerida para oferentes)
   const [nacionalidades, setNacionalidades] = useState<Nacionalidad[]>([]);
+  // Estado para indicar si se está procesando el registro
   const [cargando, setCargando] = useState(false);
 
+  // Effect que carga las nacionalidades disponibles al montar el componente
   useEffect(() => {
     api.getNacionalidades().then(setNacionalidades).catch(() => {});
   }, []);
 
+  // Cambia entre tipo empresa / oferente y reinicia el formulario
   const cambiarTipo = (t: string) => {
     setTipo(t);
     setForm(t === 'empresa' ? { ...FORM_EMPRESA } : { ...FORM_OFERENTE });
     onNavegar(`/registro/${t}`);
   };
 
+  // Función auxiliar para actualizar un campo específico del formulario
   const set = (campo: string, valor: string) => setForm((prev) => ({ ...prev, [campo]: valor }));
 
+  // Manejador del envío del formulario de registro
   const manejarRegistro = async (e: React.FormEvent) => {
     e.preventDefault();
     setCargando(true);
@@ -47,6 +62,7 @@ function RegistroPage({ onNavegar, onMensaje, tipoInicial }: Props) {
   };
 
   return (
+    // Render del formulario de registro con selector de tipo (empresa / oferente)
     <section className="container my-4 flex-grow-1">
       <div className="row justify-content-center">
         <div className="col-md-6">
@@ -63,6 +79,7 @@ function RegistroPage({ onNavegar, onMensaje, tipoInicial }: Props) {
                 />
               </div>
 
+              {/* Botones para alternar entre registro de empresa y oferente */}
               <div className="btn-group w-100 mb-4" role="group">
                 <button type="button" className={`btn ${tipo === 'oferente' ? 'btn-dark' : 'btn-outline-dark'}`} onClick={() => cambiarTipo('oferente')}>
                   Oferente
@@ -73,6 +90,7 @@ function RegistroPage({ onNavegar, onMensaje, tipoInicial }: Props) {
               </div>
 
               <form onSubmit={manejarRegistro}>
+                {/* Campos del formulario para registro de empresa */}
                 {tipo === 'empresa' && (
                   <>
                     <div className="mb-3">
@@ -102,6 +120,7 @@ function RegistroPage({ onNavegar, onMensaje, tipoInicial }: Props) {
                   </>
                 )}
 
+                {/* Campos del formulario para registro de oferente */}
                 {tipo === 'oferente' && (
                   <>
                     <div className="mb-3">

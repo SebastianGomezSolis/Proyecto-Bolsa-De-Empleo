@@ -1,3 +1,6 @@
+// Página pública que lista todas las ofertas laborales disponibles.
+// Incluye un campo de búsqueda para filtrar por descripción o nombre de empresa.
+
 import { useEffect, useState } from 'react';
 import SectionTitle from '../../components/SectionTitle';
 import LoadingBlock from '../../components/LoadingBlock';
@@ -6,14 +9,19 @@ import { formatSalario, formatFecha } from '../../utils/formatters';
 import { MensajeGlobal, Puesto, PuestosResponse } from '../../types';
 
 interface Props {
+  // Función de callback para mostrar mensajes globales (éxito/error)
   onMensaje: (m: MensajeGlobal) => void;
 }
 
 function PuestosPublicosPage({ onMensaje }: Props) {
+  // Estado para almacenar todos los puestos públicos obtenidos del backend
   const [puestos, setPuestos] = useState<Puesto[]>([]);
+  // Estado para el texto del filtro de búsqueda local
   const [filtro, setFiltro] = useState('');
+  // Estado para indicar si se están cargando los puestos
   const [cargando, setCargando] = useState(true);
 
+  // Effect que carga todos los puestos públicos al montar el componente
   useEffect(() => {
     api.getPuestosPublicos()
       .then((res: PuestosResponse) => {
@@ -23,12 +31,14 @@ function PuestosPublicosPage({ onMensaje }: Props) {
       .finally(() => setCargando(false));
   }, [onMensaje]);
 
+  // Filtra los puestos localmente por descripción o nombre de empresa
   const filtrados = puestos.filter((p) =>
     p.descripcion?.toLowerCase().includes(filtro.toLowerCase()) ||
     p.empresa?.nombre?.toLowerCase().includes(filtro.toLowerCase())
   );
 
   return (
+    // Render del listado de puestos públicos con filtro de búsqueda
     <section className="container py-5">
       <SectionTitle
         eyebrow="Puestos disponibles"
@@ -36,6 +46,7 @@ function PuestosPublicosPage({ onMensaje }: Props) {
         description="Explorá todas las oportunidades laborales publicadas por empresas registradas."
       />
 
+      {/* Campo de búsqueda para filtrar puestos por descripción o empresa */}
       <div className="mb-4">
         <input
           className="form-control"

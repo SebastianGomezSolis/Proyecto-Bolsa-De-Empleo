@@ -5,18 +5,28 @@ import { api } from '../../services/api';
 import { Sesion, MensajeGlobal, OferentePerfil } from '../../types';
 
 interface Props {
+  // Sesión actual del usuario (se usa para verificar rol de oferente)
   sesion: Sesion | null;
+  // Función de navegación para redirigir al usuario a otras páginas
   onNavegar: (ruta: string) => void;
+  // Función de callback para mostrar mensajes globales (éxito/error)
   onMensaje: (m: MensajeGlobal) => void;
 }
 
+// Componente principal para gestionar el CV del oferente
 function OferenteCVPage({ sesion, onNavegar, onMensaje }: Props) {
+  // Perfil del oferente (incluye la ruta del CV si existe)
   const [oferente, setOferente] = useState<OferentePerfil | null>(null);
+  // Controla si se muestra el formulario para subir un nuevo CV
   const [mostrarSubir, setMostrarSubir] = useState(false);
+  // Archivo PDF seleccionado para subir
   const [archivo, setArchivo] = useState<File | null>(null);
+  // Indicador de carga inicial del perfil
   const [cargando, setCargando] = useState(true);
+  // Indicador de subida de CV en curso
   const [subiendo, setSubiendo] = useState(false);
 
+  // Effect para cargar el perfil del oferente al montar el componente
   useEffect(() => {
     if (!sesion || sesion.rol !== 'OFERENTE') return;
     api.getPerfilOferente()
@@ -25,6 +35,7 @@ function OferenteCVPage({ sesion, onNavegar, onMensaje }: Props) {
       .finally(() => setCargando(false));
   }, [sesion, onMensaje]);
 
+  // Verificar que el usuario esté autenticado y tenga rol de oferente
   if (!sesion || sesion.rol !== 'OFERENTE') {
     return (
       <section className="container py-5">
@@ -34,6 +45,7 @@ function OferenteCVPage({ sesion, onNavegar, onMensaje }: Props) {
     );
   }
 
+  // Subir el archivo CV al backend
   const subirCV = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!archivo) return;
@@ -42,6 +54,7 @@ function OferenteCVPage({ sesion, onNavegar, onMensaje }: Props) {
       await api.subirCV(archivo);
       onMensaje({ tipo: 'success', texto: 'CV subido correctamente.' });
       setMostrarSubir(false);
+      // Recargar el perfil para reflejar el nuevo CV
       const perfil = await api.getPerfilOferente();
       setOferente(perfil);
     } catch (err) {
@@ -57,6 +70,7 @@ function OferenteCVPage({ sesion, onNavegar, onMensaje }: Props) {
 
       {cargando ? <LoadingBlock /> : (
         <>
+          {/* Botones para ver y subir CV */}
           <div className="d-flex gap-2 mb-4">
             {oferente?.curriculum ? (
               <a href={`/${oferente.curriculum}`}
@@ -67,17 +81,20 @@ function OferenteCVPage({ sesion, onNavegar, onMensaje }: Props) {
             <button className="btn btn-dark" onClick={() => setMostrarSubir(true)}>Subir CV</button>
           </div>
 
+          {/* Mensaje informativo cuando no hay CV subido */}
           {!mostrarSubir && !oferente?.curriculum && (
             <div className="alert alert-warning" style={{ maxWidth: '450px' }}>
               Aún no tenés un CV subido. Presioná <strong>Subir CV</strong> para agregar uno.
             </div>
           )}
+          {/* Mensaje informativo cuando ya hay un CV subido */}
           {!mostrarSubir && oferente?.curriculum && (
             <div className="alert alert-success" style={{ maxWidth: '450px' }}>
               Ya tenés un CV subido. Podés verlo o reemplazarlo cuando quieras.
             </div>
           )}
 
+          {/* Formulario para subir un nuevo CV (solo PDF) */}
           {mostrarSubir && (
             <div className="border rounded p-4 bg-white" style={{ maxWidth: '450px' }}>
               <h5 className="mb-3">Subir nuevo CV</h5>
@@ -105,4 +122,5 @@ function OferenteCVPage({ sesion, onNavegar, onMensaje }: Props) {
   );
 }
 
+// Exportar el componente para usarlo en el enrutador
 export default OferenteCVPage;
