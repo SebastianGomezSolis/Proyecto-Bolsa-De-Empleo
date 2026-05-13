@@ -10,4 +10,5 @@ import java.util.Optional;
 // Proporciona consultas especificas para administradores.
 public interface AdministradorRepository extends CrudRepository<Administrador, Integer> {
     Optional<Administrador> findByUsuario(Usuario usuario);
+    Optional<Administrador> findByUsuario_Correo(String correo);
 }

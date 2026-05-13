@@ -15,6 +15,11 @@ public class HabilidadService {
     @Autowired
     private HabilidadRepository habilidadRepository;
 
+    // Retorna todas las habilidades registradas en el sistema
+    public Iterable<Habilidad> findAll() {
+        return habilidadRepository.findAll();
+    }
+
     // Retorna todas las habilidades asociadas a un oferente especifico.
     // Se usa para mostrar el perfil de habilidades del candidato.
     public List<Habilidad> findByOferente(Integer oferenteId) {
@@ -27,8 +32,8 @@ public class HabilidadService {
     }
 
     // Guarda o actualiza una habilidad en la base de datos
-    public void save(Habilidad habilidad) {
-        habilidadRepository.save(habilidad);
+    public Habilidad save(Habilidad habilidad) {
+        return habilidadRepository.save(habilidad);
     }
 
     // Elimina una habilidad por su ID

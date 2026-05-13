@@ -102,8 +102,8 @@ public class EmpresaController {
                 || !puesto.getEmpresa().getId().equals(sesionUsuarioBean.getReferenciaId()))
             return forbidden();
 
-        String error = modeloDatos.getPuestoService().desactivar(id);
-        if (error != null) return ResponseEntity.badRequest().body(error);
+        Puesto desactivado = modeloDatos.getPuestoService().desactivar(id);
+        if (desactivado == null) return ResponseEntity.badRequest().body("Puesto no encontrado");
         return ResponseEntity.ok("Puesto desactivado");
     }
 

@@ -38,9 +38,24 @@ public class OferenteService {
         return oferenteRepository.findById(id).orElse(null);
     }
 
+    // Busca un oferente por el correo de su usuario. Retorna null si no existe.
+    public Oferente findByCorreo(String correo) {
+        return oferenteRepository.findByUsuario_Correo(correo).orElse(null);
+    }
+
+    // Busca un oferente por su identificacion (cedula). Retorna null si no existe.
+    public Oferente findByIdentificacion(String identificacion) {
+        return oferenteRepository.findByIdentificacion(identificacion).orElse(null);
+    }
+
     // Retorna todos los oferentes pendientes de autorizacion
     public List<Oferente> findPendientes() {
         return oferenteRepository.findByAutorizadoFalse();
+    }
+
+    // Guarda un oferente directamente en la base de datos.
+    public Oferente save(Oferente oferente) {
+        return oferenteRepository.save(oferente);
     }
 
     // Registra un nuevo oferente en el sistema.

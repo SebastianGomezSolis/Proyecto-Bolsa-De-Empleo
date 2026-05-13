@@ -11,6 +11,9 @@ import java.util.Optional;
 // Proporciona consultas especificas para empresas.
 public interface EmpresaRepository extends CrudRepository<Empresa, Integer> {
     Optional<Empresa> findByUsuario(Usuario usuario);
+    Optional<Empresa> findByUsuario_Correo(String correo);
+    Optional<Empresa> findByNombre(String nombre);
     List<Empresa> findByAutorizadoFalse();
-    boolean existsByUsuarioCorreo(String correo);
+    boolean existsByUsuario_Correo(String correo);
+    boolean existsByNombre(String nombre);
 }

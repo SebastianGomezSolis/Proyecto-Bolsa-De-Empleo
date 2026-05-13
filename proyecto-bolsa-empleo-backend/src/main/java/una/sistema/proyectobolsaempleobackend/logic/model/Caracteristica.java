@@ -3,6 +3,7 @@ package una.sistema.proyectobolsaempleobackend.logic.model;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -31,6 +32,11 @@ public class Caracteristica {
     @OneToMany(mappedBy = "padre", fetch = FetchType.LAZY)
     @JsonIgnore
     private List<Caracteristica> hijos;
+
+    @JsonProperty("padreId")
+    public Integer getPadreId() {
+        return padre != null ? padre.getId() : null;
+    }
 
     @JsonIgnore
     public boolean isHoja() {

@@ -9,8 +9,8 @@ import java.util.List;
 // Proporciona consultas para navegar el arbol jerarquico de caracteristicas.
 public interface CaracteristicaRepository extends CrudRepository<Caracteristica, Integer> {
     List<Caracteristica> findByPadreIsNull();
-    List<Caracteristica> findByPadreId(Integer padreId);
-    boolean existsByNombreAndPadreId(String nombre, Integer padreId);
-    boolean existsByNombreAndPadreIsNull(String nombre);
-    boolean existsByPadreId(Integer padreId);
+    List<Caracteristica> findByPadre_Id(Integer padreId);
+    boolean existsByNombreIgnoreCaseAndPadre_Id(String nombre, Integer padreId);
+    boolean existsByNombreIgnoreCaseAndPadreIsNull(String nombre);
+    boolean existsByPadre_Id(Integer padreId);
 }

@@ -11,7 +11,10 @@ import java.util.Optional;
 // Proporciona consultas especificas para oferentes.
 public interface OferenteRepository extends CrudRepository<Oferente, Integer> {
     Optional<Oferente> findByUsuario(Usuario usuario);
+    Optional<Oferente> findByUsuario_Correo(String correo);
+    Optional<Oferente> findByIdentificacion(String identificacion);
     List<Oferente> findByAutorizadoFalse();
     List<Oferente> findByAutorizadoTrue();
     boolean existsByIdentificacion(String identificacion);
+    boolean existsByUsuario_Correo(String correo);
 }

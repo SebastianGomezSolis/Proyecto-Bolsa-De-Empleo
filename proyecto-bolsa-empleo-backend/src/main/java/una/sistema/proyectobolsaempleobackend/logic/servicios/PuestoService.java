@@ -105,8 +105,15 @@ public class PuestoService {
     }
 
     // Guarda un puesto en la base de datos
-    public void save(Puesto puesto) {
-        puestoRepository.save(puesto);
+    public Puesto save(Puesto puesto) {
+        return puestoRepository.save(puesto);
+    }
+
+    // Crea un nuevo puesto con valores predeterminados (activo y fecha actual).
+    public Puesto crear(Puesto puesto) {
+        puesto.setActivo(true);
+        puesto.setFechaRegistro(LocalDateTime.now());
+        return puestoRepository.save(puesto);
     }
 
     // Activa un puesto desactivado para que sea visible nuevamente.
@@ -122,13 +129,14 @@ public class PuestoService {
     }
 
     // Desactiva un puesto para ocultarlo de las busquedas.
-    // Retorna null si es exitoso, o un mensaje de error.
-    public String desactivar(Integer id) {
+    @Transactional
+    public Puesto desactivar(Integer id) {
         Puesto puesto = findById(id);
-        if (puesto == null) return "Puesto no encontrado";
-        puesto.setActivo(false);
-        puestoRepository.save(puesto);
-        return null;
+        if (puesto != null) {
+            puesto.setActivo(false);
+            puestoRepository.save(puesto);
+        }
+        return puesto;
     }
 
     // Crea un puesto junto con sus caracteristicas y niveles requeridos.

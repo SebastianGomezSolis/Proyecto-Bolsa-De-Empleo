@@ -29,6 +29,11 @@ public class AdministradorService {
         return administradorRepository.findById(id).orElse(null);
     }
 
+    // Busca un administrador por el correo de su usuario. Retorna null si no existe.
+    public Administrador findByCorreo(String correo) {
+        return administradorRepository.findByUsuario_Correo(correo).orElse(null);
+    }
+
     // Crea un nuevo administrador en el sistema.
     // Valida campos requeridos, verifica que el correo sea unico,
     // asigna rol ADMIN y usuario activo por defecto.

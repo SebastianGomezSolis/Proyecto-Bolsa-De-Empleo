@@ -1,6 +1,7 @@
 package una.sistema.proyectobolsaempleobackend.logic.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -27,4 +28,9 @@ public class PuestoCaracteristica {
 
     @Column(name = "nivel_requerido", nullable = false)
     private Integer nivelRequerido;
+
+    @JsonProperty("nombre")
+    public String getNombre() {
+        return caracteristica != null ? caracteristica.getNombre() : null;
+    }
 }

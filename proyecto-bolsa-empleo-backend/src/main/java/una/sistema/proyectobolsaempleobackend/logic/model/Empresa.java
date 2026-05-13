@@ -1,5 +1,6 @@
 package una.sistema.proyectobolsaempleobackend.logic.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -34,4 +35,9 @@ public class Empresa {
 
     @Column(nullable = false)
     private Boolean autorizado = false;
+
+    @JsonProperty("usuarioCorreo")
+    public String getUsuarioCorreo() {
+        return usuario != null ? usuario.getCorreo() : null;
+    }
 }

@@ -5,7 +5,6 @@ import org.springframework.stereotype.Service;
 import una.sistema.proyectobolsaempleobackend.data.NacionalidadRepository;
 import una.sistema.proyectobolsaempleobackend.logic.model.Nacionalidad;
 
-import java.util.ArrayList;
 import java.util.List;
 
 // Servicio para la gestion de nacionalidades.
@@ -17,12 +16,10 @@ public class NacionalidadService {
     @Autowired
     private NacionalidadRepository nacionalidadRepository;
 
-    // Retorna todas las nacionalidades registradas en el sistema.
+    // Retorna todas las nacionalidades registradas en el sistema, ordenadas por nombre.
     // Los datos se cargan inicialmente desde el archivo nacionalidades.xlsx.
     public List<Nacionalidad> findAll() {
-        List<Nacionalidad> lista = new ArrayList<>();
-        nacionalidadRepository.findAll().forEach(lista::add);
-        return lista;
+        return nacionalidadRepository.findAllByOrderByNombreAsc();
     }
 
     // Busca una nacionalidad por su codigo ISO.

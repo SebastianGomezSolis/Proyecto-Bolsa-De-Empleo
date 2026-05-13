@@ -37,7 +37,7 @@ public class CaracteristicaService {
 
     // Retorna las subcaracteristicas (hijos) de una caracteristica padre.
     public List<Caracteristica> findHijos(Integer padreId) {
-        return caracteristicaRepository.findByPadreId(padreId);
+        return caracteristicaRepository.findByPadre_Id(padreId);
     }
 
     // Indica si una caracteristica es una hoja (no tiene hijos).
@@ -45,22 +45,28 @@ public class CaracteristicaService {
     // La anotacion @Transactional(readOnly = true) optimiza la lectura.
     @Transactional(readOnly = true)
     public boolean isHoja(Integer id) {
-        return !caracteristicaRepository.existsByPadreId(id);
+        return !caracteristicaRepository.existsByPadre_Id(id);
     }
 
     // Verifica si ya existe una caracteristica con el mismo nombre
     // en el mismo nivel (bajo el mismo padre o como raiz).
     public boolean existeEnMismoNivel(String nombre, Integer padreId) {
+        if (nombre == null || nombre.isBlank()) {
+            return false;
+        }
+
+        String nombreLimpio = nombre.trim();
+
         if (padreId == null) {
             // Si no hay padre, buscar en las raices
-            return caracteristicaRepository.existsByNombreAndPadreIsNull(nombre);
+            return caracteristicaRepository.existsByNombreIgnoreCaseAndPadreIsNull(nombreLimpio);
         }
         // Si hay padre, buscar entre sus hijos
-        return caracteristicaRepository.existsByNombreAndPadreId(nombre, padreId);
+        return caracteristicaRepository.existsByNombreIgnoreCaseAndPadre_Id(nombreLimpio, padreId);
     }
 
     // Guarda o actualiza una caracteristica en la base de datos
-    public void save(Caracteristica caracteristica) {
-        caracteristicaRepository.save(caracteristica);
+    public Caracteristica save(Caracteristica caracteristica) {
+        return caracteristicaRepository.save(caracteristica);
     }
 }

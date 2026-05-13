@@ -31,10 +31,25 @@ public class EmpresaService {
         return empresaRepository.findById(id).orElse(null);
     }
 
+    // Busca una empresa por el correo de su usuario. Retorna null si no existe.
+    public Empresa findByCorreo(String correo) {
+        return empresaRepository.findByUsuario_Correo(correo).orElse(null);
+    }
+
+    // Busca una empresa por su nombre. Retorna null si no existe.
+    public Empresa findByNombre(String nombre) {
+        return empresaRepository.findByNombre(nombre).orElse(null);
+    }
+
     // Retorna todas las empresas que aun no han sido autorizadas
     // (pendientes de aprobacion por un administrador)
     public List<Empresa> findPendientes() {
         return empresaRepository.findByAutorizadoFalse();
+    }
+
+    // Guarda una empresa directamente en la base de datos.
+    public Empresa save(Empresa empresa) {
+        return empresaRepository.save(empresa);
     }
 
     // Registra una nueva empresa en el sistema.
