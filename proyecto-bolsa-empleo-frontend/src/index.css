@@ -34,6 +34,18 @@ body {
   border-color: #0d6efd;
 }
 
+.tarjeta-puesto { overflow: hidden; }
+
+.tarjeta-puesto .overlay-hover {
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+}
+
+.tarjeta-puesto:hover .overlay-hover {
+  opacity: 1;
+}
+
 @media (max-width: 991.98px) {
   .global-banner .display-5 { font-size: 1.8rem; }
 }

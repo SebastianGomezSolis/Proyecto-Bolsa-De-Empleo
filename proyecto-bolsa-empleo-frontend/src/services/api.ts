@@ -5,8 +5,11 @@
 import { Sesion, Puesto, Caracteristica, Nacionalidad, EmpresaPendiente, OferentePendiente, CaracteristicasAdminResponse, CaracteristicasOferenteResponse, PuestosResponse, Habilidad, OferentePerfil, Candidato } from '../types';
 import { obtenerToken } from './authService';
 
-// URL base del backend (localhost:8080 es donde corre el Spring Boot por defecto)
-export const API_BASE = 'http://localhost:8080';
+// URL base del backend.
+// En desarrollo (localhost:3000) apunta a localhost:8080.
+// En produccion (mismo servidor) usa ruta relativa.
+const esProduccion = !window.location.origin.includes('localhost:3000') && !window.location.origin.includes('localhost:5173');
+export const API_BASE = esProduccion ? '' : 'http://localhost:8080';
 // Base de todas las rutas de API (todos los endpoints empiezan con /api)
 export const BASE_API = `${API_BASE}/api`;
 

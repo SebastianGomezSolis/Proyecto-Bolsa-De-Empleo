@@ -15,6 +15,7 @@ import una.sistema.proyectobolsaempleobackend.logic.model.Oferente;
 import una.sistema.proyectobolsaempleobackend.logic.model.Puesto;
 import una.sistema.proyectobolsaempleobackend.logic.model.SesionUsuarioBean;
 
+import jakarta.annotation.PostConstruct;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -34,6 +35,9 @@ public class EmpresaController {
     // Bean de sesion para verificar identidad y permisos
     @Autowired
     private SesionUsuarioBean sesionUsuarioBean;
+
+    // Directorio base para almacenar CVs subidos
+    private Path cvBaseDir;
 
     // GET /api/empresa/perfil
     // Retorna los datos del perfil de la empresa actualmente logueada.
@@ -176,26 +180,14 @@ public class EmpresaController {
         String filename = oferente.getCurriculum();
         if (filename == null || filename.isBlank()) return ResponseEntity.notFound().build();
 
-        // Normalizar la ruta del archivo (manejar diferentes formatos)
+        // Normalizar nombre del archivo
         String raw = filename.replace("\\", "/");
-        if (raw.startsWith("/")) raw = raw.substring(1);
+        if (raw.contains("/")) raw = raw.substring(raw.lastIndexOf("/") + 1);
 
-        // Buscar el directorio public del frontend
-        Path baseDir = buscarDirPublicFrontend().resolve("uploads/curriculos").normalize();
-
-        Path filePath;
-        if (Paths.get(raw).isAbsolute()) {
-            // Si la ruta es absoluta, usarla directamente
-            filePath = Paths.get(raw).toAbsolutePath().normalize();
-        } else {
-            // Si es relativa, construirla desde el baseDir
-            if (raw.startsWith("/uploads/curriculos/")) raw = raw.substring("/uploads/curriculos/".length());
-            if (raw.startsWith("uploads/curriculos/")) raw = raw.substring("uploads/curriculos/".length());
-            filePath = baseDir.resolve(raw).normalize();
-        }
+        Path filePath = cvBaseDir.resolve(raw).normalize();
 
         // Validar que la ruta no salga del directorio base (seguridad)
-        if (!filePath.startsWith(baseDir)) {
+        if (!filePath.startsWith(cvBaseDir)) {
             return ResponseEntity.status(400).body("Ruta inválida");
         }
 
@@ -209,25 +201,24 @@ public class EmpresaController {
                 .body(resource);
     }
 
+    // Inicializa el directorio de CVs al arrancar la aplicacion
+    @PostConstruct
+    public void init() {
+        cvBaseDir = Paths.get(System.getProperty("user.home"), ".bolsa-empleo", "curriculos").normalize();
+        try {
+            Files.createDirectories(cvBaseDir);
+        } catch (Exception e) {
+            cvBaseDir = Paths.get("uploads", "curriculos").toAbsolutePath().normalize();
+            try {
+                Files.createDirectories(cvBaseDir);
+            } catch (Exception ex) {
+                throw new RuntimeException("No se pudo crear el directorio de CVs: " + ex.getMessage());
+            }
+        }
+    }
+
     // Retorna respuesta 403 Forbidden
     private ResponseEntity<?> forbidden() {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acceso denegado");
-    }
-
-    // Busca recursivamente el directorio public del proyecto frontend.
-    // Necesario para acceder a archivos subidos por los oferentes.
-    private Path buscarDirPublicFrontend() {
-        String nombreCarpeta = "proyecto-bolsa-empleo-frontend";
-        Path actual = Paths.get("").toAbsolutePath().normalize();
-        // Buscar hacia arriba en el arbol de directorios
-        while (actual != null) {
-            Path candidato = actual.resolve(nombreCarpeta).resolve("public");
-            if (Files.isDirectory(candidato)) {
-                return candidato.normalize();
-            }
-            actual = actual.getParent();
-        }
-        // Retornar path por defecto si no se encuentra
-        return Paths.get("").toAbsolutePath().resolve(nombreCarpeta).resolve("public").normalize();
     }
 }

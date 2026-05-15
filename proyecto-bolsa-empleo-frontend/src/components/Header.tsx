@@ -3,7 +3,7 @@ import { Sesion } from '../types';
 // Propiedades para el subcomponente NavItem: etiqueta, ruta de destino y si está activo
 interface NavItemProps {
   label: string;            // Texto visible del enlace de navegación
-  href: string;             // Ruta de destino (con #)
+  href: string;             // Ruta de destino
   active?: boolean;         // Indica si el enlace corresponde a la ruta actual
 }
 
@@ -11,7 +11,9 @@ interface NavItemProps {
 function NavItem({ label, href, active = false }: NavItemProps) {
   return (
     <li className="nav-item">
-      <a className={`nav-link${active ? ' active' : ''}`} href={href} style={{ fontSize: '0.9rem' }}>{label}</a>
+      <a className={`nav-link${active ? ' active' : ''}`} href={href}
+         onClick={(e) => { e.preventDefault(); window.history.pushState(null, '', href); window.dispatchEvent(new PopStateEvent('popstate')); }}
+         style={{ fontSize: '0.9rem', cursor: 'pointer' }}>{label}</a>
     </li>
   );
 }
@@ -19,7 +21,7 @@ function NavItem({ label, href, active = false }: NavItemProps) {
 // Propiedades del componente Header: sesión actual, ruta activa, navegación y cierre de sesión
 interface Props {
   sesion: Sesion | null;             // Datos de la sesión del usuario, null si no ha iniciado sesión
-  ruta: string;                      // Ruta hash actual del navegador
+  ruta: string;                      // Ruta actual
   onNavegar: (ruta: string) => void; // Función para navegar a otra ruta
   onLogout: () => void;             // Función para cerrar la sesión
 }
@@ -36,7 +38,15 @@ function Header({ sesion, onLogout, ruta }: Props) {
     <nav className="navbar navbar-dark bg-dark">
       <div className="container-fluid p-0">
         <div className="d-flex align-items-center w-100">
-          <a className="navbar-brand mb-0 h1 px-2 d-flex align-items-center" href="#/" style={{ fontSize: '1.1rem' }}>
+          <a className="navbar-brand mb-0 h1 px-2 d-flex align-items-center" href="/"
+             onClick={(e) => {
+               e.preventDefault();
+               const destinos: Record<string, string> = { ADMIN: '/admin/dashboard', EMPRESA: '/empresa/dashboard', OFERENTE: '/oferente/dashboard' };
+               const destino = sesion ? destinos[sesion.rol] || '/' : '/';
+               window.history.pushState(null, '', destino);
+               window.dispatchEvent(new PopStateEvent('popstate'));
+             }}
+             style={{ fontSize: '1.1rem', cursor: 'pointer' }}>
             <img src="/images/bolsaEmpleo.png" alt="Logo" style={{ height: '28px', width: 'auto', marginRight: '8px' }}
               onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
             <span>Bolsa de Empleo</span>
@@ -46,39 +56,39 @@ function Header({ sesion, onLogout, ruta }: Props) {
             {/* Navegación para usuarios no autenticados: búsqueda pública y registro */}
             {!logueado && (
               <>
-                <NavItem label="Buscar puestos" href="#/puestos/buscar" active={ruta === '/puestos/buscar'} />
-                <NavItem label="Registro Empresa" href="#/registro/empresa" active={ruta === '/registro/empresa'} />
-                <NavItem label="Registro Oferente" href="#/registro/oferente" active={ruta === '/registro/oferente'} />
+                <NavItem label="Buscar puestos" href="/puestos/buscar" active={ruta === '/puestos/buscar'} />
+                <NavItem label="Registro Empresa" href="/registro/empresa" active={ruta === '/registro/empresa'} />
+                <NavItem label="Registro Oferente" href="/registro/oferente" active={ruta === '/registro/oferente'} />
               </>
             )}
 
             {/* Navegación para empresas: dashboard, puestos publicados y publicación */}
             {esEmpresa && (
               <>
-                <NavItem label="Dashboard" href="#/empresa/dashboard" active={ruta === '/empresa/dashboard'} />
-                <NavItem label="Mis puestos" href="#/empresa/puestos" active={ruta === '/empresa/puestos'} />
-                <NavItem label="Publicar puesto" href="#/empresa/publicar" active={ruta === '/empresa/publicar'} />
+                <NavItem label="Dashboard" href="/empresa/dashboard" active={ruta === '/empresa/dashboard'} />
+                <NavItem label="Mis puestos" href="/empresa/puestos" active={ruta === '/empresa/puestos'} />
+                <NavItem label="Publicar puesto" href="/empresa/publicar" active={ruta === '/empresa/publicar'} />
               </>
             )}
 
             {/* Navegación para oferentes: dashboard, habilidades, CV y búsqueda de puestos */}
             {esOferente && (
               <>
-                <NavItem label="Dashboard" href="#/oferente/dashboard" active={ruta === '/oferente/dashboard'} />
-                <NavItem label="Mis habilidades" href="#/oferente/habilidades" active={ruta === '/oferente/habilidades'} />
-                <NavItem label="Mi CV" href="#/oferente/cv" active={ruta === '/oferente/cv'} />
-                <NavItem label="Buscar puesto" href="#/oferente/buscar" active={ruta === '/oferente/buscar'} />
+                <NavItem label="Dashboard" href="/oferente/dashboard" active={ruta === '/oferente/dashboard'} />
+                <NavItem label="Mis habilidades" href="/oferente/habilidades" active={ruta === '/oferente/habilidades'} />
+                <NavItem label="Mi CV" href="/oferente/cv" active={ruta === '/oferente/cv'} />
+                <NavItem label="Buscar puesto" href="/oferente/buscar" active={ruta === '/oferente/buscar'} />
               </>
             )}
 
             {/* Navegación para administradores: panel, aprobaciones, características y reportes */}
             {esAdmin && (
               <>
-                <NavItem label="Dashboard" href="#/admin/dashboard" active={ruta === '/admin/dashboard'} />
-                <NavItem label="Empresas pendientes" href="#/admin/pendientes" active={ruta === '/admin/pendientes'} />
-                <NavItem label="Oferentes pendientes" href="#/admin/oferentes-pendientes" active={ruta === '/admin/oferentes-pendientes'} />
-                <NavItem label="Características" href="#/admin/caracteristicas" active={ruta === '/admin/caracteristicas'} />
-                <NavItem label="Reportes" href="#/admin/reportes" active={ruta === '/admin/reportes'} />
+                <NavItem label="Dashboard" href="/admin/dashboard" active={ruta === '/admin/dashboard'} />
+                <NavItem label="Empresas pendientes" href="/admin/pendientes" active={ruta === '/admin/pendientes'} />
+                <NavItem label="Oferentes pendientes" href="/admin/oferentes-pendientes" active={ruta === '/admin/oferentes-pendientes'} />
+                <NavItem label="Características" href="/admin/caracteristicas" active={ruta === '/admin/caracteristicas'} />
+                <NavItem label="Reportes" href="/admin/reportes" active={ruta === '/admin/reportes'} />
               </>
             )}
 
@@ -90,7 +100,9 @@ function Header({ sesion, onLogout, ruta }: Props) {
                   <button className="btn btn-outline-light btn-sm" onClick={onLogout}>Salir</button>
                 </>
               ) : (
-                <a className={`nav-link${ruta === '/login' ? ' active' : ''}`} href="#/login" style={{ fontSize: '0.9rem' }}>Login</a>
+                <a className={`nav-link${ruta === '/login' ? ' active' : ''}`} href="/login"
+                   onClick={(e) => { e.preventDefault(); window.history.pushState(null, '', '/login'); window.dispatchEvent(new PopStateEvent('popstate')); }}
+                   style={{ fontSize: '0.9rem', cursor: 'pointer' }}>Login</a>
               )}
             </li>
           </ul>

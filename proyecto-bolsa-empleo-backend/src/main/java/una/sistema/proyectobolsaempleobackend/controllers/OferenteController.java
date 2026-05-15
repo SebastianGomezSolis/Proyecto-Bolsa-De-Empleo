@@ -8,6 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 import una.sistema.proyectobolsaempleobackend.logic.ModeloDatos;
 import una.sistema.proyectobolsaempleobackend.logic.model.*;
 
+import jakarta.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -29,6 +30,9 @@ public class OferenteController {
     // Bean de sesion para verificar permisos
     @Autowired
     private SesionUsuarioBean sesionUsuarioBean;
+
+    // Directorio base para almacenar CVs subidos (mismo que en EmpresaController)
+    private Path cvBaseDir;
 
     // Retorna los datos del perfil del oferente logueado.
     @GetMapping("/perfil")
@@ -193,27 +197,25 @@ public class OferenteController {
 
         try {
             // Crear directorio si no existe
-            Path directorio = buscarDirPublicFrontend().resolve("uploads/curriculos");
-            Files.createDirectories(directorio);
+            Files.createDirectories(cvBaseDir);
 
             // Nombre del archivo basado en identificacion del oferente
             String idSanitizado = oferente.getIdentificacion().replaceAll("[^a-zA-Z0-9_-]", "_");
-            File destino = new File(directorio.toFile(), idSanitizado + ".pdf");
+            File destino = new File(cvBaseDir.toFile(), idSanitizado + ".pdf");
 
             // Validar ruta de destino para seguridad
-            String canonicalDir = directorio.toFile().getCanonicalPath() + File.separator;
+            String canonicalDir = cvBaseDir.toFile().getCanonicalPath() + File.separator;
             if (!destino.getCanonicalPath().startsWith(canonicalDir))
                 return ResponseEntity.badRequest().body("Ruta de archivo no permitida");
 
             // Guardar archivo
             archivo.transferTo(destino);
 
-            // Guardar ruta relativa en la base de datos
-            String rutaRelativa = "uploads/curriculos/" + idSanitizado + ".pdf";
+            // Guardar solo el nombre del archivo en la base de datos
             modeloDatos.getOferenteService()
-                    .actualizarCurriculum(sesionUsuarioBean.getReferenciaId(), rutaRelativa);
+                    .actualizarCurriculum(sesionUsuarioBean.getReferenciaId(), idSanitizado + ".pdf");
 
-            return ResponseEntity.ok(Map.of("ruta", rutaRelativa));
+            return ResponseEntity.ok(Map.of("ruta", idSanitizado + ".pdf"));
 
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al subir el archivo");
@@ -241,17 +243,19 @@ public class OferenteController {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acceso denegado");
     }
 
-    // Busca recursivamente el directorio public del proyecto frontend
-    private Path buscarDirPublicFrontend() {
-        String nombreCarpeta = "proyecto-bolsa-empleo-frontend";
-        Path actual = Paths.get("").toAbsolutePath().normalize();
-        while (actual != null) {
-            Path candidato = actual.resolve(nombreCarpeta).resolve("public");
-            if (Files.isDirectory(candidato)) {
-                return candidato.normalize();
+    // Inicializa el directorio de CVs al arrancar la aplicacion
+    @PostConstruct
+    public void init() {
+        cvBaseDir = Paths.get(System.getProperty("user.home"), ".bolsa-empleo", "curriculos").normalize();
+        try {
+            Files.createDirectories(cvBaseDir);
+        } catch (Exception e) {
+            cvBaseDir = Paths.get("uploads", "curriculos").toAbsolutePath().normalize();
+            try {
+                Files.createDirectories(cvBaseDir);
+            } catch (Exception ex) {
+                throw new RuntimeException("No se pudo crear el directorio de CVs: " + ex.getMessage());
             }
-            actual = actual.getParent();
         }
-        return Paths.get("").toAbsolutePath().resolve(nombreCarpeta).resolve("public").normalize();
     }
 }

@@ -22,14 +22,13 @@ import DashboardOferentePage from './pages/oferente/DashboardOferentePage';
 import OferenteBuscarPuestoPage from './pages/oferente/OferenteBuscarPuestoPage';
 import OferenteHabilidadesPage from './pages/oferente/OferenteHabilidadesPage';
 import OferenteCVPage from './pages/oferente/OferenteCVPage';
-import { obtenerSesionGuardada, limpiarSesion } from './services/authService';
+import { obtenerSesionGuardada, limpiarSesion, obtenerToken } from './services/authService';
 import { MensajeGlobal, Sesion } from './types';
+import { api } from './services/api';
 
-// Obtiene la ruta actual del hash del navegador, limpiando el prefijo '#'
+// Obtiene la ruta actual usando el pathname (sin #)
 function obtenerRuta(): string {
-  const hash = window.location.hash || '#/';
-  const ruta = hash.replace('#', '');
-  return ruta.startsWith('/') ? ruta : `/${ruta}`;
+  return window.location.pathname;
 }
 
 // Representa una ruta ya procesada: base (patrón con :params) y los valores extraídos
@@ -58,27 +57,32 @@ function parsearRuta(ruta: string): RutaParseada {
 // Rutas públicas que muestran el banner global en la parte superior de la página
 const RUTAS_CON_BANNER = ['/', '/puestos/buscar', '/login', '/registro/empresa', '/registro/oferente'];
 
-// Componente principal de la aplicación. Maneja la navegación basada en hash,
+// Componente principal de la aplicación. Maneja la navegación con History API,
 // el estado global de sesión y los mensajes emergentes, y renderiza la página correspondiente.
 function App() {
-  const [ruta, setRuta] = useState<string>(obtenerRuta);           // Ruta hash actual del navegador
+  const [ruta, setRuta] = useState<string>(obtenerRuta);           // Ruta actual (pathname)
   const [sesion, setSesion] = useState<Sesion | null>(obtenerSesionGuardada);  // Sesión del usuario (null si no ha iniciado)
   const [mensaje, setMensaje] = useState<MensajeGlobal | null>(null);          // Mensaje global (alerta/info/error)
 
-  // Escucha el evento hashchange del navegador para actualizar la ruta en el estado
+  // Escucha el evento popstate (navegación con History API)
   useEffect(() => {
     const handler = () => setRuta(obtenerRuta());
-    window.addEventListener('hashchange', handler);
-    return () => window.removeEventListener('hashchange', handler);
+    window.addEventListener('popstate', handler);
+    return () => window.removeEventListener('popstate', handler);
   }, []);
 
-  // Función memoizada para navegar cambiando el hash del navegador
+  // Función memoizada para navegar usando History API (pushState + popstate)
   const navegar = useCallback((destino: string) => {
-    window.location.hash = destino;
+    window.history.pushState(null, '', destino);
+    window.dispatchEvent(new PopStateEvent('popstate'));
   }, []);
 
   // Limpia la sesión del storage, resetea el estado y redirige al inicio
   function cerrarSesion() {
+    // Enviar logout al backend (best-effort: no bloquear si falla)
+    if (obtenerToken()) {
+      api.logout().catch(() => {});
+    }
     limpiarSesion();
     setSesion(null);
     setMensaje({ tipo: 'success', texto: 'Sesión cerrada correctamente.' });

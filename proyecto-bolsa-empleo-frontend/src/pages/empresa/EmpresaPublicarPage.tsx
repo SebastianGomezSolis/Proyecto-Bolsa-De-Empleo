@@ -89,8 +89,12 @@ function EmpresaPublicarPage({ sesion, onNavegar, onMensaje }: Props) {
     setEnviando(true);
     try {
       // Preparar los datos de las características seleccionadas con sus niveles
+      // Formato: { "nivel_5": "3", "nivel_8": "2" } (Map que el backend espera)
       const caracteristicaIds = Object.keys(selCaracteristicas).map(Number);
-      const niveles = caracteristicaIds.map((id) => ({ id, nivel: Number(selCaracteristicas[id]) }));
+      const niveles: Record<string, string> = {};
+      caracteristicaIds.forEach((id) => {
+        niveles[`nivel_${id}`] = String(Number(selCaracteristicas[id]));
+      });
 
       // Llamar al API para crear el puesto con todos los datos del formulario
       await api.crearPuesto({

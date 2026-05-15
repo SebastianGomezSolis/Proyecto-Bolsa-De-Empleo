@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react';
 import SectionTitle from '../../components/SectionTitle';
 import LoadingBlock from '../../components/LoadingBlock';
-import CardPuesto from '../../components/CardPuesto';
 import { api } from '../../services/api';
 import { Sesion, MensajeGlobal, Puesto, PuestosResponse } from '../../types';
+import { formatSalario, formatFecha } from '../../utils/formatters';
 
 interface Props {
   // Sesión actual del usuario (null si no está autenticado)
@@ -36,27 +36,46 @@ function HomePage({ sesion, onNavegar, onMensaje }: Props) {
 
   return (
     <>
-      {/* Sección de últimos puestos publicados */}
-      <section className="container py-5">
+      <section className="container my-4">
         <SectionTitle
           eyebrow="Últimas ofertas"
-          title="Puestos recientes"
-          description="Un vistazo a las últimas oportunidades laborales publicadas en el sistema."
+          title="Bolsa de Empleo"
+          description="Últimos 5 puestos públicos disponibles."
         />
         {cargando ? <LoadingBlock /> : (
-          <div className="row g-3">
+          <div className="row g-3 align-items-start">
             {puestos.length === 0 ? (
-              <div className="col-12"><p className="text-secondary">No hay puestos publicados aún.</p></div>
-            ) : puestos.map((p) => (
-              <div key={p.id} className="col-md-6 col-lg-4">
-                <CardPuesto puesto={p} />
+              <div className="col-12"><p className="text-secondary">No hay puestos públicos registrados aún.</p></div>
+            ) : puestos.map((p, i) => (
+              <div key={p.id} className="col-md-4">
+                <div className="card h-100">
+                  <div className="card-body d-flex flex-column">
+                    <h6 className="fw-bold mb-0">{p.empresa?.nombre}</h6>
+                    <p className="text-muted mb-2">{p.descripcion}</p>
+                    <p><strong>Salario:</strong> {formatSalario(p.salario, p.tipoCambio)}</p>
+                    {!p.tipoCambio && <p className="text-muted small">Tipo de cambio no disponible</p>}
+                    <div className="mt-auto">
+                      <a className="btn btn-outline-dark w-100" data-bs-toggle="collapse"
+                         href={`#detalle-${i}`} role="button">
+                        Ver detalle
+                      </a>
+                      <div className="collapse mt-2 border rounded p-2 bg-white" id={`detalle-${i}`}>
+                        <p className="fw-bold mb-1">{p.descripcion}</p>
+                        {p.caracteristicas && p.caracteristicas.length > 0 ? (
+                          <ul className="mb-0">
+                            {p.caracteristicas.map((c) => (
+                              <li key={c.id}>{c.nombre} (nivel {c.nivelRequerido})</li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="text-muted small mb-0">Sin características requeridas</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             ))}
-          </div>
-        )}
-        {!cargando && puestos.length > 0 && !logueado && (
-          <div className="mt-4">
-            <button className="btn btn-outline-primary" onClick={() => onNavegar('/puestos/buscar')}>Ver todos los puestos</button>
           </div>
         )}
       </section>

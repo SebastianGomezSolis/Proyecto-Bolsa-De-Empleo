@@ -13,8 +13,10 @@ interface Props {
 }
 
 function CardPuesto({ puesto, mostrarEmpresa = true }: Props) {
+  const tieneCaracteristicas = puesto.caracteristicas && puesto.caracteristicas.length > 0;
+
   return (
-    <div className="card shadow-sm border-0 h-100">
+    <div className="card shadow-sm border-0 h-100 position-relative tarjeta-puesto">
       <div className="card-body">
         {/* Información superior: tipo de publicación y fecha */}
         <div className="d-flex justify-content-between align-items-start mb-2">
@@ -32,6 +34,20 @@ function CardPuesto({ puesto, mostrarEmpresa = true }: Props) {
           <div className="text-secondary small mt-1">{puesto.empresa.nombre}</div>
         )}
       </div>
+      {/* Hover overlay con detalle de características requeridas */}
+      {tieneCaracteristicas && (
+        <div className="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-75 text-white p-3 rounded overlay-hover">
+          <small className="fw-bold text-uppercase text-warning">Características requeridas</small>
+          <ul className="list-unstyled small mt-2 mb-0">
+            {puesto.caracteristicas.map((c, i) => (
+              <li key={i} className="d-flex justify-content-between">
+                <span>{c.nombre}</span>
+                <span className="text-info">Nivel {c.nivelRequerido}/5</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
