@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import SectionTitle from '../../components/SectionTitle';
 import LoadingBlock from '../../components/LoadingBlock';
-import { api } from '../../services/api';
+import { BASE_API, getAuthHeaders } from '../../services/api';
 import { Sesion, MensajeGlobal, Puesto, PuestosResponse } from '../../types';
 import { formatSalario, formatFecha } from '../../utils/formatters';
 
@@ -26,7 +26,8 @@ function HomePage({ sesion, onNavegar, onMensaje }: Props) {
 
   // Effect que carga los últimos puestos públicos al montar el componente
   useEffect(() => {
-    api.getUltimosPuestosPublicos()
+    fetch(`${BASE_API}/publico/puestos/ultimos`, { headers: getAuthHeaders() })
+      .then(async (res) => { if (res.ok) return res.json(); throw new Error(await res.text()); })
       .then((res: PuestosResponse) => {
         setPuestos((res.puestos ?? []).map((p: Puesto) => ({ ...p, tipoCambio: res.tipoCambio })));
       })

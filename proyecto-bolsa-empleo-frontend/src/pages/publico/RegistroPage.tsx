@@ -2,7 +2,7 @@
 // como para oferentes, con formularios adaptados según el tipo seleccionado.
 
 import { useEffect, useState } from 'react';
-import { api } from '../../services/api';
+import { BASE_API, getAuthHeaders } from '../../services/api';
 import { MensajeGlobal, Nacionalidad } from '../../types';
 
 // Valores iniciales del formulario para cada tipo de registro
@@ -32,7 +32,9 @@ function RegistroPage({ onNavegar, onMensaje, tipoInicial }: Props) {
 
   // Effect que carga las nacionalidades disponibles al montar el componente
   useEffect(() => {
-    api.getNacionalidades().then(setNacionalidades).catch(() => {});
+    fetch(`${BASE_API}/publico/nacionalidades`, { headers: getAuthHeaders() })
+      .then(async (res) => { if (res.ok) setNacionalidades(await res.json()); })
+      .catch(() => {});
   }, []);
 
   // Cambia entre tipo empresa / oferente y reinicia el formulario
@@ -50,8 +52,10 @@ function RegistroPage({ onNavegar, onMensaje, tipoInicial }: Props) {
     e.preventDefault();
     setCargando(true);
     try {
-      const fn = tipo === 'empresa' ? api.registrarEmpresa : api.registrarOferente;
-      const msg = await fn(form);
+      const url = tipo === 'empresa' ? `${BASE_API}/auth/registro/empresa` : `${BASE_API}/auth/registro/oferente`;
+      const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }, body: JSON.stringify(form) });
+      if (!response.ok) throw new Error(await response.text());
+      const msg = await response.text();
       onMensaje({ tipo: 'success', texto: typeof msg === 'string' ? msg : 'Registro exitoso. Espere la aprobación del administrador.' });
       onNavegar('/login');
     } catch (error) {

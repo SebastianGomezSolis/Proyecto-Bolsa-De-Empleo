@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import SectionTitle from '../../components/SectionTitle';
 import LoadingBlock from '../../components/LoadingBlock';
-import { api } from '../../services/api';
+import { BASE_API, getAuthHeaders } from '../../services/api';
 import { Sesion, MensajeGlobal, Caracteristica } from '../../types';
 
 interface Props {
@@ -38,7 +38,9 @@ function AdminCaracteristicasPage({ sesion, onNavegar, onMensaje }: Props) {
   const cargarNodo = useCallback(async (actualId: number | null = null) => {
     try {
       // Llamada al backend para obtener características y metadata de navegación
-      const resp = await api.getCaracteristicasAdmin(actualId ?? undefined);
+      const res = await fetch(`${BASE_API}/admin/caracteristicas${actualId != null ? `?actualId=${actualId}` : ''}`, { headers: getAuthHeaders() });
+      if (!res.ok) throw new Error(await res.text());
+      const resp = await res.json();
       // Actualizar estados con los datos recibidos
       setSubcategorias(resp.subcategorias ?? []);
       setActual(resp.actual ?? null);
@@ -112,7 +114,8 @@ function AdminCaracteristicasPage({ sesion, onNavegar, onMensaje }: Props) {
     if (!nombre.trim()) return; // Validar que el nombre no esté vacío
     try {
       // Llamada al backend para crear la característica
-      await api.crearCaracteristica({ nombre: nombre.trim(), padreId: actual?.id ?? null });
+      const res = await fetch(`${BASE_API}/admin/caracteristicas`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }, body: JSON.stringify({ nombre: nombre.trim(), padreId: actual?.id ?? null }) });
+      if (!res.ok) throw new Error(await res.text());
       onMensaje({ tipo: 'success', texto: 'Característica creada.' }); // Mostrar éxito
       setNombre(''); // Limpiar campo de nombre
       // Recargar la lista de características para mostrar la nueva creada

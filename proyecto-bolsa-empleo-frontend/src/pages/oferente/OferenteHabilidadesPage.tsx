@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import SectionTitle from '../../components/SectionTitle';
 import LoadingBlock from '../../components/LoadingBlock';
-import { api } from '../../services/api';
+import { BASE_API, getAuthHeaders } from '../../services/api';
 import { Sesion, MensajeGlobal, Caracteristica, Habilidad } from '../../types';
 
 interface Props {
@@ -36,19 +36,24 @@ function OferenteHabilidadesPage({ sesion, onNavegar, onMensaje }: Props) {
 
   // Recargar la lista de habilidades desde el backend
   const cargarHabilidades = () =>
-    api.getHabilidades()
+    fetch(`${BASE_API}/oferente/habilidades`, { headers: getAuthHeaders() })
+      .then(async (res) => { if (res.ok) return res.json(); else throw new Error(await res.text()); })
       .then(setHabilidades)
       .catch((e: Error) => onMensaje({ tipo: 'danger', texto: e.message }));
 
   // Cargar subcategorías de un padre (o raíces si padreId es null)
   const cargarSubcategorias = async (padreId: number | null = null) => {
     try {
-      const data = padreId ? await api.getCaracteristicasHijos(padreId) : await api.getCaracteristicasRaiz();
+      const url = padreId ? `${BASE_API}/publico/caracteristicas?padreId=${padreId}` : `${BASE_API}/publico/caracteristicas`;
+      const dataRes = await fetch(url, { headers: getAuthHeaders() });
+      if (!dataRes.ok) throw new Error(await dataRes.text());
+      const data: Caracteristica[] = await dataRes.json();
       setSubcategorias(data);
-      // Determinar qué nodos son hojas consultando sus hijos
       const nuevasHojas = new Set(hojas);
       await Promise.all(data.map(async (n) => {
-        const hijos = await api.getCaracteristicasHijos(n.id);
+        const hijosRes = await fetch(`${BASE_API}/publico/caracteristicas?padreId=${n.id}`, { headers: getAuthHeaders() });
+        if (!hijosRes.ok) throw new Error(await hijosRes.text());
+        const hijos = await hijosRes.json();
         if (hijos.length === 0) nuevasHojas.add(n.id);
         else nuevasHojas.delete(n.id);
       }));
@@ -61,7 +66,15 @@ function OferenteHabilidadesPage({ sesion, onNavegar, onMensaje }: Props) {
   // Effect para cargar habilidades y categorías raíz al montar el componente
   useEffect(() => {
     if (!sesion || sesion.rol !== 'OFERENTE') return;
-    Promise.all([api.getHabilidades(), api.getCaracteristicasRaiz()])
+    Promise.all([
+      fetch(`${BASE_API}/oferente/habilidades`, { headers: getAuthHeaders() }),
+      fetch(`${BASE_API}/publico/caracteristicas`, { headers: getAuthHeaders() })
+    ])
+      .then(async ([hRes, rRes]) => {
+        if (!hRes.ok) throw new Error(await hRes.text());
+        if (!rRes.ok) throw new Error(await rRes.text());
+        return Promise.all([hRes.json(), rRes.json()]);
+      })
       .then(([h, r]) => { setHabilidades(h); setSubcategorias(r); })
       .catch((e: Error) => onMensaje({ tipo: 'danger', texto: e.message }))
       .finally(() => setCargando(false));
@@ -114,7 +127,8 @@ function OferenteHabilidadesPage({ sesion, onNavegar, onMensaje }: Props) {
     const id = selId || actual?.id;
     if (!id) return;
     try {
-      await api.agregarHabilidad({ caracteristicaId: Number(id), nivel: Number(nivel) });
+      const agregarRes = await fetch(`${BASE_API}/oferente/habilidades`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }, body: JSON.stringify({ caracteristicaId: Number(id), nivel: Number(nivel) }) });
+      if (!agregarRes.ok) throw new Error(await agregarRes.text());
       onMensaje({ tipo: 'success', texto: 'Habilidad agregada.' });
       setSelId(null);
       setNivel(1);
@@ -128,7 +142,8 @@ function OferenteHabilidadesPage({ sesion, onNavegar, onMensaje }: Props) {
   const eliminar = async (id: number) => {
     if (!window.confirm('¿Eliminar esta habilidad?')) return;
     try {
-      await api.eliminarHabilidad(id);
+      const eliminarRes = await fetch(`${BASE_API}/oferente/habilidades/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+      if (!eliminarRes.ok) throw new Error(await eliminarRes.text());
       onMensaje({ tipo: 'success', texto: 'Habilidad eliminada.' });
       cargarHabilidades();
     } catch (e) {

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import SectionTitle from '../../components/SectionTitle';
 import LoadingBlock from '../../components/LoadingBlock';
-import { api } from '../../services/api';
+import { BASE_API, getAuthHeaders } from '../../services/api';
 import { Sesion, MensajeGlobal, OferentePerfil, Habilidad } from '../../types';
 
 interface Props {
@@ -32,8 +32,8 @@ function EmpresaDetalleCandidatoPage({ sesion, onNavegar, onMensaje, id, puestoI
     // Solo proceder si el usuario es empresa, existe un ID de oferente y un ID de puesto
     if (!sesion || sesion.rol !== 'EMPRESA' || !id) return;
     if (!puestoId) return;
-    api.getDetalleOferente(id, puestoId)
-      .then((data) => { setOferente(data.oferente); setHabilidades(data.habilidades || []); })
+    fetch(`${BASE_API}/empresa/candidatos/${id}?puestoId=${puestoId}`, { headers: getAuthHeaders() })
+      .then(async (res) => { if (res.ok) { const data = await res.json(); setOferente(data.oferente); setHabilidades(data.habilidades || []); } else throw new Error(await res.text()); })
       .catch((e: Error) => onMensaje({ tipo: 'danger', texto: e.message }))
       .finally(() => setCargando(false));
   }, [sesion, id, puestoId, onMensaje]);

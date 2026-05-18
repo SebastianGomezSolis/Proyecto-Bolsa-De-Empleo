@@ -6,12 +6,15 @@ import SectionTitle from '../../components/SectionTitle';
 import LoadingBlock from '../../components/LoadingBlock';
 import SelectorCaracteristicas from '../../components/SelectorCaracteristicas';
 import ResultadosPuesto from '../../components/ResultadosPuesto';
-import { api } from '../../services/api';
+import { BASE_API, getAuthHeaders } from '../../services/api';
 import { MensajeGlobal, Caracteristica, Puesto } from '../../types';
 
 // Función recursiva para cargar el árbol completo de características desde el backend
 async function cargarArbolCompleto(padreId: number | null = null): Promise<Caracteristica[]> {
-  const nodos = padreId ? await api.getCaracteristicasHijos(padreId) : await api.getCaracteristicasRaiz();
+  const url = padreId ? `${BASE_API}/publico/caracteristicas?padreId=${padreId}` : `${BASE_API}/publico/caracteristicas`;
+  const response = await fetch(url, { headers: getAuthHeaders() });
+  if (!response.ok) throw new Error(await response.text());
+  const nodos: Caracteristica[] = await response.json();
   return Promise.all(
     nodos.map(async (n) => {
       const hijos = await cargarArbolCompleto(n.id);
@@ -54,7 +57,10 @@ function BuscarPuestoPublicoPage({ onMensaje }: Props) {
     e.preventDefault();
     setBuscando(true);
     try {
-      const res = await api.buscarPuestosPublicos(seleccionados);
+      const params = seleccionados.length ? `?caracteristicas=${seleccionados.join(',')}` : '';
+      const response = await fetch(`${BASE_API}/publico/puestos/buscar${params}`, { headers: getAuthHeaders() });
+      if (!response.ok) throw new Error(await response.text());
+      const res = await response.json();
       setPuestos((res.puestos ?? []).map((p: Puesto) => ({ ...p, tipoCambio: res.tipoCambio })));
     } catch (e) {
       onMensaje({ tipo: 'danger', texto: (e as Error).message });

@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import SectionTitle from '../../components/SectionTitle';
 import LoadingBlock from '../../components/LoadingBlock';
 import AccesoRestringido from '../../components/AccesoRestringido';
-import { api } from '../../services/api';
+import { BASE_API, getAuthHeaders } from '../../services/api';
 import { Sesion, MensajeGlobal, EmpresaPendiente } from '../../types';
 
 interface Props {
@@ -26,8 +26,8 @@ function AdminPendientesPage({ sesion, onNavegar, onMensaje }: Props) {
   // Función memoizada para obtener la lista de empresas pendientes desde el backend
   const cargar = useCallback(() => {
     setCargando(true);
-    api.getEmpresasPendientes()
-      .then(setEmpresas)
+    fetch(`${BASE_API}/admin/empresas/pendientes`, { headers: getAuthHeaders() })
+      .then(async (res) => { if (res.ok) setEmpresas(await res.json()); else throw new Error(await res.text()); })
       .catch((e: Error) => onMensaje({ tipo: 'danger', texto: e.message }))
       .finally(() => setCargando(false));
   }, [onMensaje]);
@@ -43,7 +43,8 @@ function AdminPendientesPage({ sesion, onNavegar, onMensaje }: Props) {
   // Función para autorizar una empresa pendiente y generar su clave de acceso
   const autorizar = async (id: number) => {
     try {
-      await api.autorizarEmpresa(id);
+      const res = await fetch(`${BASE_API}/admin/empresas/${id}/autorizar`, { method: 'POST', headers: getAuthHeaders() });
+      if (!res.ok) throw new Error(await res.text());
       onMensaje({ tipo: 'success', texto: 'Empresa autorizada.' });
       cargar(); // Recargar la lista después de autorizar
     } catch (e) { onMensaje({ tipo: 'danger', texto: (e as Error).message }); }

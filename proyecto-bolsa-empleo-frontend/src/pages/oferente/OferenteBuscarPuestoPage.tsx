@@ -3,7 +3,7 @@ import SectionTitle from '../../components/SectionTitle';
 import LoadingBlock from '../../components/LoadingBlock';
 import SelectorCaracteristicas from '../../components/SelectorCaracteristicas';
 import ResultadosPuesto from '../../components/ResultadosPuesto';
-import { api } from '../../services/api';
+import { BASE_API, getAuthHeaders } from '../../services/api';
 import { Sesion, MensajeGlobal, Caracteristica, Puesto } from '../../types';
 
 interface Props {
@@ -34,13 +34,19 @@ function OferenteBuscarPuestoPage({ sesion, onNavegar, onMensaje }: Props) {
     const cargar = async () => {
       try {
         // Obtener raíces y sus hijos y nietos para construir el árbol
-        const raiz = await api.getCaracteristicasRaiz();
+        const raizRes = await fetch(`${BASE_API}/publico/caracteristicas`, { headers: getAuthHeaders() });
+        if (!raizRes.ok) throw new Error(await raizRes.text());
+        const raiz: Caracteristica[] = await raizRes.json();
         const conHijos = await Promise.all(
           raiz.map(async (r) => {
-            const hijos = await api.getCaracteristicasHijos(r.id);
+            const hijosRes = await fetch(`${BASE_API}/publico/caracteristicas?padreId=${r.id}`, { headers: getAuthHeaders() });
+            if (!hijosRes.ok) throw new Error(await hijosRes.text());
+            const hijos: Caracteristica[] = await hijosRes.json();
             const hijosConNietos = await Promise.all(
               hijos.map(async (h) => {
-                const nietos = await api.getCaracteristicasHijos(h.id);
+                const nietosRes = await fetch(`${BASE_API}/publico/caracteristicas?padreId=${h.id}`, { headers: getAuthHeaders() });
+                if (!nietosRes.ok) throw new Error(await nietosRes.text());
+                const nietos = await nietosRes.json();
                 return { ...h, hijos: nietos };
               })
             );
@@ -76,7 +82,10 @@ function OferenteBuscarPuestoPage({ sesion, onNavegar, onMensaje }: Props) {
     e.preventDefault();
     setBuscando(true);
     try {
-      const res = await api.buscarPuestosOferente(seleccionados);
+      const params = seleccionados.length > 0 ? `?caracteristicaIds=${seleccionados.join(',')}` : '';
+      const buscarRes = await fetch(`${BASE_API}/oferente/puestos/buscar${params}`, { headers: getAuthHeaders() });
+      if (!buscarRes.ok) throw new Error(await buscarRes.text());
+      const res = await buscarRes.json();
       setPuestos((res.puestos ?? []).map((p: Puesto) => ({ ...p, tipoCambio: res.tipoCambio })));
     } catch (e) {
       onMensaje({ tipo: 'danger', texto: (e as Error).message });

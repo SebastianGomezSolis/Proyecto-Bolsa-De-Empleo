@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import SectionTitle from '../../components/SectionTitle';
 import LoadingBlock from '../../components/LoadingBlock';
-import { api } from '../../services/api';
+import { BASE_API, getAuthHeaders } from '../../services/api';
 import { Sesion, MensajeGlobal, Caracteristica } from '../../types';
 
 interface Props {
@@ -34,13 +34,19 @@ function EmpresaPublicarPage({ sesion, onNavegar, onMensaje }: Props) {
     const cargar = async () => {
       try {
         // Obtener las características raíz y construir el árbol completo
-        const raiz = await api.getCaracteristicasRaiz();
+        const raizResp = await fetch(`${BASE_API}/publico/caracteristicas`, { headers: getAuthHeaders() });
+        if (!raizResp.ok) throw new Error(await raizResp.text());
+        const raiz: Caracteristica[] = await raizResp.json();
         const conHijos = await Promise.all(
           raiz.map(async (r) => {
-            const hijos = await api.getCaracteristicasHijos(r.id);
+            const hijosResp = await fetch(`${BASE_API}/publico/caracteristicas?padreId=${r.id}`, { headers: getAuthHeaders() });
+            if (!hijosResp.ok) throw new Error(await hijosResp.text());
+            const hijos: Caracteristica[] = await hijosResp.json();
             const hijosConNietos = await Promise.all(
               hijos.map(async (h) => {
-                const nietos = await api.getCaracteristicasHijos(h.id);
+                const nietosResp = await fetch(`${BASE_API}/publico/caracteristicas?padreId=${h.id}`, { headers: getAuthHeaders() });
+                if (!nietosResp.ok) throw new Error(await nietosResp.text());
+                const nietos = await nietosResp.json();
                 return { ...h, hijos: nietos };
               })
             );
@@ -97,12 +103,13 @@ function EmpresaPublicarPage({ sesion, onNavegar, onMensaje }: Props) {
       });
 
       // Llamar al API para crear el puesto con todos los datos del formulario
-      await api.crearPuesto({
+      const res = await fetch(`${BASE_API}/empresa/puestos`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }, body: JSON.stringify({
         ...form,
         salario: Number(form.salario),
         caracteristicaIds,
         niveles,
-      });
+      }) });
+      if (!res.ok) throw new Error(await res.text());
       onMensaje({ tipo: 'success', texto: 'Puesto publicado correctamente.' });
       onNavegar('/empresa/puestos'); // Redirigir a la lista de puestos
     } catch (error) {

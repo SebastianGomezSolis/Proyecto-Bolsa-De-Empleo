@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import SectionTitle from '../../components/SectionTitle';
 import LoadingBlock from '../../components/LoadingBlock';
-import { api } from '../../services/api';
+import { BASE_API, getAuthHeaders } from '../../services/api';
 import { formatSalario, formatFecha } from '../../utils/formatters';
 import { MensajeGlobal, Puesto, PuestosResponse } from '../../types';
 
@@ -23,7 +23,8 @@ function PuestosPublicosPage({ onMensaje }: Props) {
 
   // Effect que carga todos los puestos públicos al montar el componente
   useEffect(() => {
-    api.getPuestosPublicos()
+    fetch(`${BASE_API}/publico/puestos`, { headers: getAuthHeaders() })
+      .then(async (res) => { if (res.ok) return res.json(); throw new Error(await res.text()); })
       .then((res: PuestosResponse) => {
         setPuestos(res.puestos ?? []);
       })

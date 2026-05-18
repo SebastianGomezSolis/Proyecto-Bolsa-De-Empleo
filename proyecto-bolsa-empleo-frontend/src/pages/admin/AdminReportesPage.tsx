@@ -3,8 +3,7 @@
 
 import { useState } from 'react';
 import SectionTitle from '../../components/SectionTitle';
-import { API_BASE } from '../../services/api';
-import { obtenerToken } from '../../services/authService';
+import { API_BASE, obtenerToken } from '../../services/api';
 import { Sesion } from '../../types';
 
 const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];

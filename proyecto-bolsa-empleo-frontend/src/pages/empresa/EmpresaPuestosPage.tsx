@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import SectionTitle from '../../components/SectionTitle';
 import LoadingBlock from '../../components/LoadingBlock';
-import { api } from '../../services/api';
+import { BASE_API, getAuthHeaders } from '../../services/api';
 import { formatSalario } from '../../utils/formatters';
 import { Sesion, MensajeGlobal, Puesto } from '../../types';
 
@@ -26,10 +26,10 @@ function EmpresaPuestosPage({ sesion, onNavegar, onMensaje }: Props) {
   // useCallback evita recrear la función en cada render
   const cargar = useCallback(() => {
     setCargando(true); // Indicar que comenzó la carga
-    api.getPuestosEmpresa()
-      .then(setPuestos) // Actualizar estado con los datos recibidos
-      .catch((e: Error) => onMensaje({ tipo: 'danger', texto: e.message })) // Manejar errores
-      .finally(() => setCargando(false)); // Siempre finalizar el estado de carga
+    fetch(`${BASE_API}/empresa/puestos`, { headers: getAuthHeaders() })
+      .then(async (res) => { if (res.ok) setPuestos(await res.json()); else throw new Error(await res.text()); })
+      .catch((e: Error) => onMensaje({ tipo: 'danger', texto: e.message }))
+      .finally(() => setCargando(false));
   }, [onMensaje]);
 
   // Effect que se ejecuta al montar el componente o cuando cambia la sesión
@@ -64,7 +64,8 @@ function EmpresaPuestosPage({ sesion, onNavegar, onMensaje }: Props) {
   const desactivar = async (id: number) => {
     if (!window.confirm('¿Desactivar este puesto?')) return;
     try {
-      await api.desactivarPuesto(id);
+      const res = await fetch(`${BASE_API}/empresa/puestos/${id}/desactivar`, { method: 'POST', headers: getAuthHeaders() });
+      if (!res.ok) throw new Error(await res.text());
       onMensaje({ tipo: 'success', texto: 'Puesto desactivado.' });
       cargar(); // Recargar la lista para reflejar el cambio
     } catch (e) {
@@ -75,7 +76,8 @@ function EmpresaPuestosPage({ sesion, onNavegar, onMensaje }: Props) {
   // Función para activar un puesto desactivado
   const activar = async (id: number) => {
     try {
-      await api.activarPuesto(id);
+      const res = await fetch(`${BASE_API}/empresa/puestos/${id}/activar`, { method: 'POST', headers: getAuthHeaders() });
+      if (!res.ok) throw new Error(await res.text());
       onMensaje({ tipo: 'success', texto: 'Puesto activado.' });
       cargar(); // Recargar la lista para reflejar el cambio
     } catch (e) {

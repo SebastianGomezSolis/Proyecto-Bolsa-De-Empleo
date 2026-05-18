@@ -22,9 +22,8 @@ import DashboardOferentePage from './pages/oferente/DashboardOferentePage';
 import OferenteBuscarPuestoPage from './pages/oferente/OferenteBuscarPuestoPage';
 import OferenteHabilidadesPage from './pages/oferente/OferenteHabilidadesPage';
 import OferenteCVPage from './pages/oferente/OferenteCVPage';
-import { obtenerSesionGuardada, limpiarSesion, obtenerToken } from './services/authService';
+import { obtenerSesionGuardada, limpiarSesion, obtenerToken, BASE_API } from './services/api';
 import { MensajeGlobal, Sesion } from './types';
-import { api } from './services/api';
 
 // Obtiene la ruta actual usando el pathname (sin #)
 function obtenerRuta(): string {
@@ -79,9 +78,8 @@ function App() {
 
   // Limpia la sesión del storage, resetea el estado y redirige al inicio
   function cerrarSesion() {
-    // Enviar logout al backend (best-effort: no bloquear si falla)
     if (obtenerToken()) {
-      api.logout().catch(() => {});
+      fetch(`${BASE_API}/auth/logout`, { method: 'POST', headers: { 'Authorization': `Bearer ${obtenerToken()}` } }).catch(() => {});
     }
     limpiarSesion();
     setSesion(null);

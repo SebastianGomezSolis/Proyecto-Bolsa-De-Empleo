@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import SectionTitle from '../../components/SectionTitle';
 import LoadingBlock from '../../components/LoadingBlock';
 import AccesoRestringido from '../../components/AccesoRestringido';
-import { api } from '../../services/api';
+import { BASE_API, getAuthHeaders } from '../../services/api';
 import { Sesion, MensajeGlobal, OferentePendiente } from '../../types';
 
 interface Props {
@@ -24,10 +24,10 @@ function AdminOferentesPendientesPage({ sesion, onNavegar, onMensaje }: Props) {
   // useCallback evita recrear la función en cada render
   const cargar = useCallback(() => {
     setCargando(true); // Indicar que comenzó la carga
-    api.getOferentesPendientes()
-      .then(setOferentes) // Actualizar estado con los datos recibidos
-      .catch((e: Error) => onMensaje({ tipo: 'danger', texto: e.message })) // Manejar errores
-      .finally(() => setCargando(false)); // Siempre finalizar el estado de carga
+    fetch(`${BASE_API}/admin/oferentes/pendientes`, { headers: getAuthHeaders() })
+      .then(async (res) => { if (res.ok) setOferentes(await res.json()); else throw new Error(await res.text()); })
+      .catch((e: Error) => onMensaje({ tipo: 'danger', texto: e.message }))
+      .finally(() => setCargando(false));
   }, [onMensaje]);
 
   // Effect que se ejecuta cuando cambia la sesión o la función cargar
@@ -46,7 +46,8 @@ function AdminOferentesPendientesPage({ sesion, onNavegar, onMensaje }: Props) {
   const autorizar = async (id: number) => {
     try {
       // Llamada al backend para autorizar el oferente
-      await api.autorizarOferente(id);
+      const res = await fetch(`${BASE_API}/admin/oferentes/${id}/autorizar`, { method: 'POST', headers: getAuthHeaders() });
+      if (!res.ok) throw new Error(await res.text());
       // Mostrar mensaje de éxito
       onMensaje({ tipo: 'success', texto: 'Oferente autorizado.' });
       // Recargar la lista para mostrar los cambios

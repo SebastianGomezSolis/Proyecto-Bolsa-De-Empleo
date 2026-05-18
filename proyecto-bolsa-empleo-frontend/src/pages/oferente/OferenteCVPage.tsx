@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import SectionTitle from '../../components/SectionTitle';
 import LoadingBlock from '../../components/LoadingBlock';
-import { api } from '../../services/api';
+import { BASE_API, getAuthHeaders } from '../../services/api';
 import { Sesion, MensajeGlobal, OferentePerfil } from '../../types';
 
 interface Props {
@@ -29,8 +29,8 @@ function OferenteCVPage({ sesion, onNavegar, onMensaje }: Props) {
   // Effect para cargar el perfil del oferente al montar el componente
   useEffect(() => {
     if (!sesion || sesion.rol !== 'OFERENTE') return;
-    api.getPerfilOferente()
-      .then(setOferente)
+    fetch(`${BASE_API}/oferente/perfil`, { headers: getAuthHeaders() })
+      .then(async (res) => { if (res.ok) setOferente(await res.json()); else throw new Error(await res.text()); })
       .catch((e: Error) => onMensaje({ tipo: 'danger', texto: e.message }))
       .finally(() => setCargando(false));
   }, [sesion, onMensaje]);
@@ -51,11 +51,14 @@ function OferenteCVPage({ sesion, onNavegar, onMensaje }: Props) {
     if (!archivo) return;
     setSubiendo(true);
     try {
-      await api.subirCV(archivo);
+      const fd = new FormData(); fd.append('archivo', archivo);
+      const subirRes = await fetch(`${BASE_API}/oferente/cv/subir`, { method: 'POST', body: fd, headers: getAuthHeaders() });
+      if (!subirRes.ok) throw new Error(await subirRes.text());
       onMensaje({ tipo: 'success', texto: 'CV subido correctamente.' });
       setMostrarSubir(false);
-      // Recargar el perfil para reflejar el nuevo CV
-      const perfil = await api.getPerfilOferente();
+      const perfilRes = await fetch(`${BASE_API}/oferente/perfil`, { headers: getAuthHeaders() });
+      if (!perfilRes.ok) throw new Error(await perfilRes.text());
+      const perfil = await perfilRes.json();
       setOferente(perfil);
     } catch (err) {
       onMensaje({ tipo: 'danger', texto: (err as Error).message });

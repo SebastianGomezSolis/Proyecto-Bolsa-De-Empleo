@@ -3,8 +3,7 @@
 
 import { useState } from 'react';
 import SectionTitle from '../../components/SectionTitle';
-import { api } from '../../services/api';
-import { guardarSesion } from '../../services/authService';
+import { BASE_API, getAuthHeaders, guardarSesion } from '../../services/api';
 import { MensajeGlobal, Sesion } from '../../types';
 
 interface Props {
@@ -37,7 +36,9 @@ function LoginPage({ onSesion, onNavegar, onMensaje }: Props) {
     e.preventDefault();
     setCargando(true);
     try {
-      const datos = await api.login({ correo: form.correo, clave: form.clave });
+      const response = await fetch(`${BASE_API}/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }, body: JSON.stringify({ correo: form.correo, clave: form.clave }) });
+      if (!response.ok) throw new Error(await response.text());
+      const datos = await response.json();
 
       if (recordar) {
         localStorage.setItem('bolsa.recordar', 'true');
@@ -112,13 +113,6 @@ function LoginPage({ onSesion, onNavegar, onMensaje }: Props) {
                   </button>
                 </div>
               </form>
-              <hr className="my-4" />
-              <p className="text-center mb-0 small">
-                ¿No tenés cuenta?{' '}
-                <button className="btn btn-link p-0 small" onClick={() => onNavegar('/registro/empresa')}>
-                  Registrate aquí
-                </button>
-              </p>
             </div>
           </div>
         </div>

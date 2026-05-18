@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import SectionTitle from '../../components/SectionTitle';
 import LoadingBlock from '../../components/LoadingBlock';
-import { api } from '../../services/api';
+import { BASE_API, getAuthHeaders } from '../../services/api';
 import { Sesion, MensajeGlobal, Puesto, Candidato } from '../../types';
 
 interface Props {
@@ -31,12 +31,16 @@ function EmpresaCandidatosPage({ sesion, onNavegar, onMensaje, puestoId }: Props
     const cargar = async () => {
       try {
         // Obtener los puestos de la empresa y los candidatos del puesto en paralelo
-        const [puestos, cands] = await Promise.all([
-          api.getPuestosEmpresa(),
-          api.getCandidatosPuesto(puestoId),
+        const [puestosResp, candsResp] = await Promise.all([
+          fetch(`${BASE_API}/empresa/puestos`, { headers: getAuthHeaders() }),
+          fetch(`${BASE_API}/empresa/puestos/${puestoId}/candidatos`, { headers: getAuthHeaders() }),
         ]);
+        if (!puestosResp.ok) throw new Error(await puestosResp.text());
+        if (!candsResp.ok) throw new Error(await candsResp.text());
+        const puestos = await puestosResp.json();
+        const cands = await candsResp.json();
         // Buscar el puesto actual dentro de la lista de puestos
-        setPuesto(puestos.find((p) => p.id === Number(puestoId)) || null);
+        setPuesto((puestos as Puesto[]).find((p) => p.id === Number(puestoId)) || null);
         // Normalizar la respuesta (puede venir como array o como objeto con propiedad candidatos)
         const lista = Array.isArray(cands) ? cands : (cands as any)?.candidatos ?? [];
         setCandidatos(lista);
