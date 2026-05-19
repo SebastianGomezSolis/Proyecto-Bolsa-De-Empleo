@@ -1,6 +1,6 @@
 import { Sesion } from '../types';
 
-const esProduccion = !window.location.origin.includes('localhost:3000') && !window.location.origin.includes('localhost:5173');
+const esProduccion = !window.location.origin.includes('localhost:3000');
 export const API_BASE = esProduccion ? '' : 'http://localhost:8080';
 export const BASE_API = `${API_BASE}/api`;
 

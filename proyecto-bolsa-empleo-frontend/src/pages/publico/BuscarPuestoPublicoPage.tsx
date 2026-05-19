@@ -57,7 +57,7 @@ function BuscarPuestoPublicoPage({ onMensaje }: Props) {
     e.preventDefault();
     setBuscando(true);
     try {
-      const params = seleccionados.length ? `?caracteristicas=${seleccionados.join(',')}` : '';
+      const params = seleccionados.length ? `?caracteristicaIds=${seleccionados.join(',')}` : '';
       const response = await fetch(`${BASE_API}/publico/puestos/buscar${params}`, { headers: getAuthHeaders() });
       if (!response.ok) throw new Error(await response.text());
       const res = await response.json();

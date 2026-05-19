@@ -41,10 +41,9 @@ function parsearRuta(ruta: string): RutaParseada {
   const candidatosMatch = ruta.match(/^\/empresa\/puestos\/(\d+)\/candidatos$/);
   if (candidatosMatch) return { base: '/empresa/puestos/:id/candidatos', params: { puestoId: candidatosMatch[1] } };
 
-  const detalleCandidatoMatch = ruta.match(/^\/empresa\/candidatos\/(\d+)/);
+  const detalleCandidatoMatch = ruta.match(/^\/empresa\/candidatos\/(\d+)\/puesto\/(\d+)/);
   if (detalleCandidatoMatch) {
-    const searchParams = new URLSearchParams(ruta.split('?')[1] || '');
-    return { base: '/empresa/candidatos/:id', params: { id: detalleCandidatoMatch[1], puestoId: searchParams.get('puestoId') || '' } };
+    return { base: '/empresa/candidatos/:id/puesto/:puestoId', params: { id: detalleCandidatoMatch[1], puestoId: detalleCandidatoMatch[2] } };
   }
 
   const registroMatch = ruta.match(/^\/registro\/(empresa|oferente)$/);
@@ -109,7 +108,7 @@ function App() {
         return <EmpresaPublicarPage sesion={sesion} onNavegar={navegar} onMensaje={setMensaje} />;
       case '/empresa/puestos/:id/candidatos':
         return <EmpresaCandidatosPage sesion={sesion} onNavegar={navegar} onMensaje={setMensaje} puestoId={Number(params.puestoId)} />;
-      case '/empresa/candidatos/:id':
+      case '/empresa/candidatos/:id/puesto/:puestoId':
         return <EmpresaDetalleCandidatoPage sesion={sesion} onNavegar={navegar} onMensaje={setMensaje} id={Number(params.id)} puestoId={Number(params.puestoId)} />;
       case '/oferente/dashboard':
         return <DashboardOferentePage sesion={sesion} onNavegar={navegar} />;

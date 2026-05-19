@@ -94,7 +94,7 @@ function EmpresaCandidatosPage({ sesion, onNavegar, onMensaje, puestoId }: Props
                   <td>
                     {/* Botón para ver el detalle completo del candidato */}
                     <button className="btn btn-outline-dark btn-sm"
-                      onClick={() => onNavegar(`/empresa/candidatos/${c.oferente?.id}?puestoId=${puestoId}`)}>
+                      onClick={() => onNavegar(`/empresa/candidatos/${c.oferente?.id}/puesto/${puestoId}`)}>
                       Ver detalle
                     </button>
                   </td>
