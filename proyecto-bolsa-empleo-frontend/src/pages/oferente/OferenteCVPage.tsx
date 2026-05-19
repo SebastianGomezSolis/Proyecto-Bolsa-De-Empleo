@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import SectionTitle from '../../components/SectionTitle';
 import LoadingBlock from '../../components/LoadingBlock';
-import { BASE_API, getAuthHeaders } from '../../services/api';
+import { BASE_API, getAuthHeaders, descargarPDF } from '../../services/api';
 import { Sesion, MensajeGlobal, OferentePerfil } from '../../types';
 
 interface Props {
@@ -76,8 +76,7 @@ function OferenteCVPage({ sesion, onNavegar, onMensaje }: Props) {
           {/* Botones para ver y subir CV */}
           <div className="d-flex gap-2 mb-4">
             {oferente?.curriculum ? (
-              <a href={`/${oferente.curriculum}`}
-                target="_blank" rel="noreferrer" className="btn btn-dark">Ver CV</a>
+              <button className="btn btn-dark" onClick={() => descargarPDF(`${BASE_API}/oferente/cv`)}>Ver CV</button>
             ) : (
               <button className="btn btn-dark" disabled>Ver CV</button>
             )}

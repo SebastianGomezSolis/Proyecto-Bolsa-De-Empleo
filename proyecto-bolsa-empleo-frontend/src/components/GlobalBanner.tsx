@@ -20,7 +20,7 @@ interface BannerConfig {
 const bannerConfig: Record<string, BannerConfig> = {
   '/': {
     eyebrow: 'Bolsa de Empleo',
-    title: 'Conectamos talento con oportunidades.',
+    title: 'Conectamos talento.',
     description: 'Explorá puestos disponibles, registrate como empresa u oferente y gestioná tu perfil desde el panel correspondiente.',
     buttonLabel: 'Ver puestos disponibles',
     buttonRoute: '/puestos/buscar',

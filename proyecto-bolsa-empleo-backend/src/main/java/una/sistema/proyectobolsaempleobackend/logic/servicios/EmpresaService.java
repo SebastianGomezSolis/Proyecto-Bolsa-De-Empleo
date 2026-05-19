@@ -77,6 +77,10 @@ public class EmpresaService {
         if (usuarioService.existeCorreo(empresa.getUsuario().getCorreo()))
             return "El correo ya está registrado";
 
+        // Verificar que el nombre de la empresa no este duplicado
+        if (empresaRepository.existsByNombre(empresa.getNombre()))
+            return "El nombre de la empresa ya está registrado";
+
         // Asignar rol de empresa al usuario
         empresa.getUsuario().setRol(Rol.EMPRESA);
 

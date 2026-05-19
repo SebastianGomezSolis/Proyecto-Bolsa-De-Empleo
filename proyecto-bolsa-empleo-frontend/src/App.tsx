@@ -6,7 +6,8 @@ import GlobalBanner from './components/GlobalBanner';
 import AlertaMensaje from './components/AlertaMensaje';
 import HomePage from './pages/publico/HomePage';
 import LoginPage from './pages/publico/LoginPage';
-import RegistroPage from './pages/publico/RegistroPage';
+import RegistroEmpresaPage from './pages/publico/RegistroEmpresaPage';
+import RegistroOferentePage from './pages/publico/RegistroOferentePage';
 import BuscarPuestoPublicoPage from './pages/publico/BuscarPuestoPublicoPage';
 import DashboardAdminPage from './pages/admin/DashboardAdminPage';
 import AdminPendientesPage from './pages/admin/AdminPendientesPage';
@@ -45,9 +46,6 @@ function parsearRuta(ruta: string): RutaParseada {
   if (detalleCandidatoMatch) {
     return { base: '/empresa/candidatos/:id/puesto/:puestoId', params: { id: detalleCandidatoMatch[1], puestoId: detalleCandidatoMatch[2] } };
   }
-
-  const registroMatch = ruta.match(/^\/registro\/(empresa|oferente)$/);
-  if (registroMatch) return { base: '/registro/:tipo', params: { tipo: registroMatch[1] } };
 
   return { base: ruta, params: {} };
 }
@@ -94,10 +92,10 @@ function App() {
     switch (base) {
       case '/login':
         return <LoginPage onSesion={setSesion} onNavegar={navegar} onMensaje={setMensaje} />;
-      case '/registro/:tipo':
       case '/registro/empresa':
+        return <RegistroEmpresaPage onNavegar={navegar} onMensaje={setMensaje} />;
       case '/registro/oferente':
-        return <RegistroPage onNavegar={navegar} onMensaje={setMensaje} tipoInicial={params.tipo} />;
+        return <RegistroOferentePage onNavegar={navegar} onMensaje={setMensaje} />;
       case '/puestos/buscar':
         return <BuscarPuestoPublicoPage onMensaje={setMensaje} />;
       case '/empresa/dashboard':

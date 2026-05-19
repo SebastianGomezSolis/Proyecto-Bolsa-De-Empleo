@@ -31,3 +31,12 @@ export function getAuthHeaders(): Record<string, string> {
   if (token) headers['Authorization'] = `Bearer ${token}`;
   return headers;
 }
+
+export async function descargarPDF(url: string): Promise<void> {
+  const res = await fetch(url, { headers: getAuthHeaders() });
+  if (!res.ok) throw new Error(await res.text());
+  const blob = await res.blob();
+  const blobUrl = URL.createObjectURL(blob);
+  window.open(blobUrl, '_blank');
+  setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
+}

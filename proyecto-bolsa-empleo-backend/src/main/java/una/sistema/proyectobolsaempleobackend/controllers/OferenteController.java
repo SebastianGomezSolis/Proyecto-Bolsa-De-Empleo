@@ -1,7 +1,11 @@
 package una.sistema.proyectobolsaempleobackend.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -177,6 +181,33 @@ public class OferenteController {
         return ResponseEntity.ok(resp);
     }
 
+    // Descarga el CV del oferente logueado.
+    @GetMapping("/cv")
+    public ResponseEntity<?> verCv() throws Exception {
+        if (!sesionUsuarioBean.isOferente()) return forbidden();
+
+        Oferente oferente = modeloDatos.getOferenteService().findById(sesionUsuarioBean.getReferenciaId());
+        if (oferente == null) return ResponseEntity.notFound().build();
+
+        String filename = oferente.getCurriculum();
+        if (filename == null || filename.isBlank()) return ResponseEntity.notFound().build();
+
+        String raw = filename.replace("\\", "/");
+        if (raw.contains("/")) raw = raw.substring(raw.lastIndexOf("/") + 1);
+
+        Path filePath = cvBaseDir.resolve(raw).normalize();
+        if (!filePath.startsWith(cvBaseDir))
+            return ResponseEntity.status(400).body("Ruta inválida");
+
+        Resource resource = new UrlResource(filePath.toUri());
+        if (!resource.exists()) return ResponseEntity.notFound().build();
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")
+                .body(resource);
+    }
+
     // Sube el curriculum (CV) del oferente en formato PDF.
     // El archivo se guarda en uploads/curriculos del frontend.
     @PostMapping("/cv/subir")
@@ -246,11 +277,28 @@ public class OferenteController {
     // Inicializa el directorio de CVs al arrancar la aplicacion
     @PostConstruct
     public void init() {
-        cvBaseDir = Paths.get(System.getProperty("user.home"), ".bolsa-empleo", "curriculos").normalize();
+        String wd = System.getProperty("user.dir");
+        // Opcion 1: desde el directorio del backend (../proyecto-bolsa-empleo-frontend)
+        Path p1 = Paths.get(wd, "..", "proyecto-bolsa-empleo-frontend", "public", "uploads", "curriculos").normalize();
+        // Opcion 2: desde el directorio padre (proyecto-bolsa-empleo-frontend)
+        Path p2 = Paths.get(wd, "proyecto-bolsa-empleo-frontend", "public", "uploads", "curriculos").normalize();
+        // Validar cada una verificando que exista package.json en el frontend
+        for (Path p : new Path[]{p1, p2}) {
+            Path frontendDir = p.getParent().getParent().getParent();
+            if (frontendDir != null && Files.exists(frontendDir.resolve("package.json"))) {
+                try {
+                    Files.createDirectories(p);
+                    cvBaseDir = p;
+                    return;
+                } catch (Exception ignored) {}
+            }
+        }
+        // Fallback: directorio local uploads/curriculos
+        cvBaseDir = Paths.get(wd, "uploads", "curriculos").normalize();
         try {
             Files.createDirectories(cvBaseDir);
         } catch (Exception e) {
-            cvBaseDir = Paths.get("uploads", "curriculos").toAbsolutePath().normalize();
+            cvBaseDir = Paths.get(System.getProperty("user.home"), ".bolsa-empleo", "curriculos");
             try {
                 Files.createDirectories(cvBaseDir);
             } catch (Exception ex) {

@@ -204,11 +204,28 @@ public class EmpresaController {
     // Inicializa el directorio de CVs al arrancar la aplicacion
     @PostConstruct
     public void init() {
-        cvBaseDir = Paths.get(System.getProperty("user.home"), ".bolsa-empleo", "curriculos").normalize();
+        String wd = System.getProperty("user.dir");
+        // Opcion 1: desde el directorio del backend (../proyecto-bolsa-empleo-frontend)
+        Path p1 = Paths.get(wd, "..", "proyecto-bolsa-empleo-frontend", "public", "uploads", "curriculos").normalize();
+        // Opcion 2: desde el directorio padre (proyecto-bolsa-empleo-frontend)
+        Path p2 = Paths.get(wd, "proyecto-bolsa-empleo-frontend", "public", "uploads", "curriculos").normalize();
+        // Validar cada una verificando que exista package.json en el frontend
+        for (Path p : new Path[]{p1, p2}) {
+            Path frontendDir = p.getParent().getParent().getParent();
+            if (frontendDir != null && Files.exists(frontendDir.resolve("package.json"))) {
+                try {
+                    Files.createDirectories(p);
+                    cvBaseDir = p;
+                    return;
+                } catch (Exception ignored) {}
+            }
+        }
+        // Fallback: directorio local uploads/curriculos
+        cvBaseDir = Paths.get(wd, "uploads", "curriculos").normalize();
         try {
             Files.createDirectories(cvBaseDir);
         } catch (Exception e) {
-            cvBaseDir = Paths.get("uploads", "curriculos").toAbsolutePath().normalize();
+            cvBaseDir = Paths.get(System.getProperty("user.home"), ".bolsa-empleo", "curriculos");
             try {
                 Files.createDirectories(cvBaseDir);
             } catch (Exception ex) {

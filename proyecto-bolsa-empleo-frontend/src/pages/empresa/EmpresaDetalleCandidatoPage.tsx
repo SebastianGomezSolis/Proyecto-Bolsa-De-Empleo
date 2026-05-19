@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import SectionTitle from '../../components/SectionTitle';
 import LoadingBlock from '../../components/LoadingBlock';
-import { BASE_API, getAuthHeaders } from '../../services/api';
+import { BASE_API, getAuthHeaders, descargarPDF } from '../../services/api';
 import { Sesion, MensajeGlobal, OferentePerfil, Habilidad } from '../../types';
 
 interface Props {
@@ -66,8 +66,7 @@ function EmpresaDetalleCandidatoPage({ sesion, onNavegar, onMensaje, id, puestoI
               {/* Enlace para descargar el CV si está disponible */}
               {oferente.curriculum && (
                 <div className="mt-2">
-                  <a href={`/${oferente.curriculum}`}
-                    target="_blank" rel="noreferrer" className="btn btn-dark btn-sm">Ver CV</a>
+                  <button className="btn btn-dark btn-sm" onClick={() => descargarPDF(`${BASE_API}/empresa/candidatos/${id}/cv`)}>Ver CV</button>
                 </div>
               )}
             </div>

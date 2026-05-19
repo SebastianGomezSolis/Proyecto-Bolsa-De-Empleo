@@ -17,4 +17,5 @@ public interface OferenteRepository extends CrudRepository<Oferente, Integer> {
     List<Oferente> findByAutorizadoTrue();
     boolean existsByIdentificacion(String identificacion);
     boolean existsByUsuario_Correo(String correo);
+    boolean existsByNombreAndPrimerApellido(String nombre, String primerApellido);
 }

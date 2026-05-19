@@ -95,6 +95,10 @@ public class OferenteService {
         if (oferenteRepository.existsByIdentificacion(oferente.getIdentificacion()))
             return "La identificación ya está registrada";
 
+        // Verificar que la combinacion de nombre + primer apellido no este duplicada
+        if (oferenteRepository.existsByNombreAndPrimerApellido(oferente.getNombre(), oferente.getPrimerApellido()))
+            return "Ya existe un oferente con ese nombre y primer apellido";
+
         // Validar que la nacionalidad no sea null y tenga codigo ISO
         if (oferente.getNacionalidad() == null || oferente.getNacionalidad().getIso() == null)
             return "Nacionalidad inválida";
