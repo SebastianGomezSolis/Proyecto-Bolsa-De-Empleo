@@ -6,14 +6,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import una.sistema.proyectobolsaempleobackend.dto.*;
 import una.sistema.proyectobolsaempleobackend.logic.ModeloDatos;
 import una.sistema.proyectobolsaempleobackend.logic.model.Caracteristica;
 import una.sistema.proyectobolsaempleobackend.logic.model.SesionUsuarioBean;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 // Controller para la gestion de funciones administrativas.
 // Proporciona endpoints para aprobar empresas y oferentes pendientes,
@@ -74,43 +73,37 @@ public class AdminController {
             @RequestParam(required = false) Integer actualId) {
         if (!sesionUsuarioBean.isAdmin()) return forbidden();
 
-        Map<String, Object> resp = new HashMap<>();
+        CaracteristicasAdminResponse resp = new CaracteristicasAdminResponse();
+        resp.setTodas(modeloDatos.getCaracteristicaService().findAll());
 
-        // Si no hay ID, retornar raices del arbol
         if (actualId == null) {
-            resp.put("subcategorias", modeloDatos.getCaracteristicaService().findRaices());
-            resp.put("actual", null);
-            resp.put("ruta", List.of());
+            resp.setSubcategorias(modeloDatos.getCaracteristicaService().findRaices());
+            resp.setActual(null);
+            resp.setRuta(List.of());
         } else {
-            // Buscar la caracteristica actual
             Caracteristica actual = modeloDatos.getCaracteristicaService().findById(actualId);
             if (actual == null) {
-                // Si no existe, mostrar raices
-                resp.put("subcategorias", modeloDatos.getCaracteristicaService().findRaices());
-                resp.put("actual", null);
-                resp.put("ruta", List.of());
+                resp.setSubcategorias(modeloDatos.getCaracteristicaService().findRaices());
+                resp.setActual(null);
+                resp.setRuta(List.of());
             } else {
-                // Mostrar hijos de la caracteristica actual
-                resp.put("subcategorias", modeloDatos.getCaracteristicaService().findHijos(actualId));
-                resp.put("actual", actual);
-                resp.put("ruta", construirRuta(actual));
+                resp.setSubcategorias(modeloDatos.getCaracteristicaService().findHijos(actualId));
+                resp.setActual(actual);
+                resp.setRuta(construirRuta(actual));
             }
         }
 
-        // Incluir todas las caracteristicas para posibles selects
-        resp.put("todas", modeloDatos.getCaracteristicaService().findAll());
         return ResponseEntity.ok(resp);
     }
 
     // Crea una nueva caracteristica en el arbol.
     // Valida que no exista otra con el mismo nombre en el mismo nivel.
     @PostMapping("/caracteristicas")
-    public ResponseEntity<?> crearCaracteristica(@RequestBody Map<String, Object> body) {
+    public ResponseEntity<?> crearCaracteristica(@RequestBody CrearCaracteristicaRequest req) {
         if (!sesionUsuarioBean.isAdmin()) return forbidden();
 
-        // Obtener datos del request body
-        String nombre  = (String) body.get("nombre");
-        Integer padreId = body.get("padreId") != null ? (Integer) body.get("padreId") : null;
+        String nombre  = req.getNombre();
+        Integer padreId = req.getPadreId();
 
         // Validar que el nombre no sea vacio
         if (nombre == null || nombre.isBlank())

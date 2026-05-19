@@ -1,16 +1,15 @@
 package una.sistema.proyectobolsaempleobackend.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import una.sistema.proyectobolsaempleobackend.dto.BuscarPuestosResponse;
 import una.sistema.proyectobolsaempleobackend.logic.ModeloDatos;
 import una.sistema.proyectobolsaempleobackend.logic.model.Puesto;
 
 import java.util.List;
-import java.util.Map;
 
 // Controller para busqueda publica de puestos.
 // Proporciona un endpoint para buscar puestos publicos por caracteristicas
@@ -25,29 +24,23 @@ public class PuestosController {
     // Busca puestos publicos activos que contengan alguna de las caracteristicas especificadas.
     // Retorna los puestos con sus caracteristicas, las raices del arbol y el tipo de cambio.
     @GetMapping("/puestos/buscar")
-    public ResponseEntity<?> buscarPuestos(@RequestParam(required = false) List<Integer> caracteristicaIds) {
+    public BuscarPuestosResponse buscarPuestos(@RequestParam(required = false) List<Integer> caracteristicaIds) {
+        List<Puesto> puestos;
         if (caracteristicaIds == null || caracteristicaIds.isEmpty()) {
-            // Si no hay filtros, retornar estructura basica con raices disponibles
-            return ResponseEntity.ok(Map.of(
-                    "raices", modeloDatos.getCaracteristicaService().findRaices(),
-                    "caracteristicaIds", caracteristicaIds,
-                    "tipoCambio", obtenerTipoCambio(),
-                    "puestos", List.of()
-            ));
+            puestos = List.of();
         } else {
-            // Filtrar puestos publicos que tengan alguna de las caracteristicas seleccionadas
-            List<Puesto> puestos = modeloDatos.getPuestoService().findPublicosActivos().stream()
+            puestos = modeloDatos.getPuestoService().findPublicosActivos().stream()
                     .filter(p -> modeloDatos.getPuestoCaracteristicaService().findByPuesto(p.getId()).stream()
                             .anyMatch(pc -> caracteristicaIds.contains(pc.getCaracteristica().getId())))
                     .toList();
-
-            return ResponseEntity.ok(Map.of(
-                    "raices", modeloDatos.getCaracteristicaService().findRaices(),
-                    "caracteristicaIds", caracteristicaIds,
-                    "tipoCambio", obtenerTipoCambio(),
-                    "puestos", enriquecerPuestos(puestos)
-            ));
         }
+
+        BuscarPuestosResponse resp = new BuscarPuestosResponse();
+        resp.setRaices(modeloDatos.getCaracteristicaService().findRaices());
+        resp.setCaracteristicaIds(caracteristicaIds);
+        resp.setTipoCambio(obtenerTipoCambio());
+        resp.setPuestos(enriquecerPuestos(puestos));
+        return resp;
     }
 
     // Agrega las caracteristicas a cada puesto para enviar al frontend

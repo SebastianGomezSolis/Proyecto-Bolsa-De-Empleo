@@ -1,7 +1,12 @@
+// Página de registro de empresa.
+// Permite crear una cuenta empresarial con datos de contacto y descripcion.
+// El registro queda pendiente de aprobación por un administrador.
+
 import { useState } from 'react';
 import { BASE_API, getAuthHeaders } from '../../services/api';
 import { MensajeGlobal } from '../../types';
 
+// Valores iniciales del formulario
 const FORM_EMPRESA = { correo: '', clave: '', nombre: '', localizacion: '', telefono: '', descripcion: '' };
 
 interface Props {
@@ -15,8 +20,10 @@ function RegistroEmpresaPage({ onNavegar, onMensaje }: Props) {
   const [form, setForm] = useState<FormValues>({ ...FORM_EMPRESA });
   const [cargando, setCargando] = useState(false);
 
+  // Actualiza un campo del formulario
   const set = (campo: string, valor: string) => setForm((prev) => ({ ...prev, [campo]: valor }));
 
+  // Envia los datos de registro al backend
   const manejarRegistro = async (e: React.FormEvent) => {
     e.preventDefault();
     setCargando(true);

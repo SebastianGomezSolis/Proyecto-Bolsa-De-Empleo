@@ -1,7 +1,12 @@
+// Página de registro de oferente (candidato).
+// Permite crear una cuenta con datos personales y nacionalidad.
+// El registro queda pendiente de aprobación por un administrador.
+
 import { useEffect, useState } from 'react';
 import { BASE_API, getAuthHeaders } from '../../services/api';
 import { MensajeGlobal, Nacionalidad } from '../../types';
 
+// Valores iniciales del formulario
 const FORM_OFERENTE = { correo: '', clave: '', identificacion: '', nombre: '', primerApellido: '', isoNacionalidad: '', telefono: '', lugarResidencia: '' };
 
 interface Props {
@@ -16,14 +21,17 @@ function RegistroOferentePage({ onNavegar, onMensaje }: Props) {
   const [nacionalidades, setNacionalidades] = useState<Nacionalidad[]>([]);
   const [cargando, setCargando] = useState(false);
 
+  // Cargar lista de nacionalidades al montar el componente
   useEffect(() => {
     fetch(`${BASE_API}/publico/nacionalidades`, { headers: getAuthHeaders() })
       .then(async (res) => { if (res.ok) setNacionalidades(await res.json()); })
       .catch(() => {});
   }, []);
 
+  // Actualiza un campo del formulario
   const set = (campo: string, valor: string) => setForm((prev) => ({ ...prev, [campo]: valor }));
 
+  // Envia los datos de registro al backend
   const manejarRegistro = async (e: React.FormEvent) => {
     e.preventDefault();
     setCargando(true);

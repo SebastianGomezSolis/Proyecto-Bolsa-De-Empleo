@@ -1,11 +1,10 @@
 package una.sistema.proyectobolsaempleobackend.dto;
 
-public class LoginResponse {
+public class SesionResponse {
     private Integer id;
     private String correo;
     private String rol;
     private Integer referenciaId;
-    private String token;
 
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
@@ -15,6 +14,4 @@ public class LoginResponse {
     public void setRol(String rol) { this.rol = rol; }
     public Integer getReferenciaId() { return referenciaId; }
     public void setReferenciaId(Integer referenciaId) { this.referenciaId = referenciaId; }
-    public String getToken() { return token; }
-    public void setToken(String token) { this.token = token; }
 }

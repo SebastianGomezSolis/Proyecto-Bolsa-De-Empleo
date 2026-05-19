@@ -5,59 +5,66 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import una.sistema.proyectobolsaempleobackend.logic.model.Rol;
 import una.sistema.proyectobolsaempleobackend.logic.model.SesionUsuarioBean;
 
 import java.io.IOException;
+import java.util.Collections;
 
-// Filtro JWT que intercepta todas las peticiones HTTP.
-// Verifica la presencia de un token JWT en el header Authorization o en los parametros de consulta, y si es valido, carga la sesion del usuario.
+// Filtro que intercepta todas las peticiones HTTP para validar el token JWT.
+// Si el token es valido, carga los datos del usuario en la sesion y en el contexto de seguridad.
 @Component
-public class JwtAuthFilter extends OncePerRequestFilter {
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
     // Servicio para generar y validar tokens JWT
     @Autowired
     private JwtService jwtService;
 
-    // Bean de sesion para almacenar los datos del usuario autenticado
+    // Bean de sesion con los datos del usuario autenticado
     @Autowired
     private SesionUsuarioBean sesionUsuarioBean;
 
-    // Metodo que se ejecuta en cada peticion HTTP.
-    // Es el punto de entrada del filtro para procesar el token JWT.
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-        // Limpiar la sesion antes de procesar (evita datos de sesiones anteriores)
+        // Limpiar sesion previa antes de procesar la peticion
         sesionUsuarioBean.logout();
 
-        // Extraer el token de diferentes fuentes posibles
+        // Extraer el token del header Authorization o de los parametros de consulta
         String authHeader = request.getHeader("Authorization");
         String token = null;
 
-        // Intentar obtener token del header Authorization (formato: "Bearer <token>")
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            token = authHeader.substring(7); // Remover prefijo "Bearer "
+            // Formato esperado: "Bearer <token>"
+            token = authHeader.substring(7);
         } else if (request.getParameter("token") != null) {
-            // Si no hay header, buscar en parametros de consulta (?token=xxx)
+            // Alternativa: token como query param (ej: ?token=xxx)
             token = request.getParameter("token");
         }
 
-        // Si se encontro un token, intentar validarlo y cargar la sesion
+        // Si se encontro un token y es valido, cargar la sesion del usuario
         if (token != null && jwtService.esValido(token)) {
-            // Extraer informacion del token JWT
+            // Extraer datos del usuario desde el token JWT
             Integer id = jwtService.obtenerUserId(token);
             String correo = jwtService.obtenerCorreo(token);
             Rol rol = jwtService.obtenerRol(token);
             Integer referenciaId = jwtService.obtenerReferenciaId(token);
 
-            // Cargar datos del usuario en el bean de sesion
+            // Cargar datos en el bean de sesion (para chequeos de rol en controllers)
             sesionUsuarioBean.login(id, correo, rol, referenciaId);
+
+            // Establecer autenticacion en el contexto de Spring Security
+            UsernamePasswordAuthenticationToken auth =
+                    new UsernamePasswordAuthenticationToken(correo, null, Collections.emptyList());
+            SecurityContextHolder.getContext().setAuthentication(auth);
         }
 
-        // Continuar con el resto de la cadena de filtros
+        // Continuar con la cadena de filtros
         filterChain.doFilter(request, response);
     }
 }

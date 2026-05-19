@@ -8,7 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import una.sistema.proyectobolsaempleobackend.dto.CrearPuestoRequest;
+import una.sistema.proyectobolsaempleobackend.dto.*;
 import una.sistema.proyectobolsaempleobackend.logic.ModeloDatos;
 import una.sistema.proyectobolsaempleobackend.logic.model.Empresa;
 import una.sistema.proyectobolsaempleobackend.logic.model.Oferente;
@@ -19,7 +19,6 @@ import jakarta.annotation.PostConstruct;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.Map;
 
 // Controller para la gestion de empresas.
@@ -159,10 +158,10 @@ public class EmpresaController {
         Puesto puesto = modeloDatos.getPuestoService().findById(puestoId);
 
         // Construir respuesta con datos del oferente, habilidades y puesto
-        Map<String, Object> resp = new HashMap<>();
-        resp.put("oferente", oferente);
-        resp.put("habilidades", modeloDatos.getHabilidadService().findByOferente(id));
-        resp.put("puesto", puesto != null ? puesto : Map.of());
+        DetalleCandidatoResponse resp = new DetalleCandidatoResponse();
+        resp.setOferente(oferente);
+        resp.setHabilidades(modeloDatos.getHabilidadService().findByOferente(id));
+        resp.setPuesto(puesto != null ? puesto : Map.of());
         return ResponseEntity.ok(resp);
     }
 

@@ -3,12 +3,11 @@ package una.sistema.proyectobolsaempleobackend.controllers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import una.sistema.proyectobolsaempleobackend.dto.*;
 import una.sistema.proyectobolsaempleobackend.logic.ModeloDatos;
 import una.sistema.proyectobolsaempleobackend.logic.model.Puesto;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 // Controller para endpoints publicos.
 // Proporciona acceso a puestos publicos sin necesidad de autenticacion.
@@ -23,34 +22,32 @@ public class PublicoController {
     // Retorna todos los puestos publicos activos.
     // Incluye las caracteristicas de cada puesto y el tipo de cambio.
     @GetMapping("/puestos")
-    public ResponseEntity<?> puestosPublicos() {
-        Map<String, Object> resp = new HashMap<>();
-        resp.put("puestos", enriquecerPuestos(modeloDatos.getPuestoService().findPublicosActivos()));
-        resp.put("tipoCambio", obtenerTipoCambio());
-        return ResponseEntity.ok(resp);
+    public PuestosPublicosResponse puestosPublicos() {
+        PuestosPublicosResponse resp = new PuestosPublicosResponse();
+        resp.setPuestos(enriquecerPuestos(modeloDatos.getPuestoService().findPublicosActivos()));
+        resp.setTipoCambio(obtenerTipoCambio());
+        return resp;
     }
 
     // Retorna los ultimos 5 puestos publicos ordenados por fecha de publicacion.
     @GetMapping("/puestos/ultimos")
-    public ResponseEntity<?> ultimosPuestosPublicos() {
-        Map<String, Object> resp = new HashMap<>();
-        resp.put("puestos", enriquecerPuestos(modeloDatos.getPuestoService().findUltimos5Publicos()));
-        resp.put("tipoCambio", obtenerTipoCambio());
-        return ResponseEntity.ok(resp);
+    public PuestosPublicosResponse ultimosPuestosPublicos() {
+        PuestosPublicosResponse resp = new PuestosPublicosResponse();
+        resp.setPuestos(enriquecerPuestos(modeloDatos.getPuestoService().findUltimos5Publicos()));
+        resp.setTipoCambio(obtenerTipoCambio());
+        return resp;
     }
 
     // Busca puestos publicos que contengan alguna de las caracteristicas especificadas.
     // Retorna puestos enriquecidos con sus caracteristicas.
     @GetMapping("/puestos/buscar")
-    public ResponseEntity<?> buscarPuestosPublicos(
+    public BuscarPuestosResponse buscarPuestosPublicos(
             @RequestParam(required = false) List<Integer> caracteristicaIds) {
 
         List<Puesto> puestos;
         if (caracteristicaIds == null || caracteristicaIds.isEmpty()) {
-            // Si no hay filtros, retornar lista vacia
             puestos = List.of();
         } else {
-            // Filtrar puestos que contengan alguna de las caracteristicas
             puestos = modeloDatos.getPuestoService().findPublicosActivos().stream()
                     .filter(p -> modeloDatos.getPuestoCaracteristicaService()
                             .findByPuesto(p.getId()).stream()
@@ -58,13 +55,12 @@ public class PublicoController {
                     .toList();
         }
 
-        // Construir respuesta completa
-        Map<String, Object> resp = new HashMap<>();
-        resp.put("puestos", enriquecerPuestos(puestos));
-        resp.put("raices", modeloDatos.getCaracteristicaService().findRaices());
-        resp.put("tipoCambio", obtenerTipoCambio());
-        resp.put("caracteristicaIds", caracteristicaIds);
-        return ResponseEntity.ok(resp);
+        BuscarPuestosResponse resp = new BuscarPuestosResponse();
+        resp.setPuestos(enriquecerPuestos(puestos));
+        resp.setRaices(modeloDatos.getCaracteristicaService().findRaices());
+        resp.setTipoCambio(obtenerTipoCambio());
+        resp.setCaracteristicaIds(caracteristicaIds);
+        return resp;
     }
 
     // Retorna el detalle de un puesto publico especifico.
@@ -75,12 +71,11 @@ public class PublicoController {
         if (puesto == null || !puesto.getActivo() || !"publico".equals(puesto.getTipoPublicacion()))
             return ResponseEntity.notFound().build();
 
-        // Cargar caracteristicas del puesto
         puesto.setCaracteristicas(modeloDatos.getPuestoCaracteristicaService().findByPuesto(id));
 
-        Map<String, Object> resp = new HashMap<>();
-        resp.put("puesto", puesto);
-        resp.put("tipoCambio", obtenerTipoCambio());
+        DetallePuestoResponse resp = new DetallePuestoResponse();
+        resp.setPuesto(puesto);
+        resp.setTipoCambio(obtenerTipoCambio());
         return ResponseEntity.ok(resp);
     }
 

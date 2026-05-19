@@ -9,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import una.sistema.proyectobolsaempleobackend.dto.*;
 import una.sistema.proyectobolsaempleobackend.logic.ModeloDatos;
 import una.sistema.proyectobolsaempleobackend.logic.model.*;
 
@@ -18,9 +19,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 // Controller para la gestion de oferentes.
 // Proporciona endpoints para perfil, habilidades, busqueda de puestos y subida de curriculum (CV).
@@ -58,11 +57,11 @@ public class OferenteController {
     // Agrega una nueva habilidad al perfil del oferente.
     // Valida que la caracteristica sea una hoja y que no este duplicada.
     @PostMapping("/habilidades")
-    public ResponseEntity<?> agregarHabilidad(@RequestBody Map<String, Object> body) {
+    public ResponseEntity<?> agregarHabilidad(@RequestBody AgregarHabilidadRequest req) {
         if (!sesionUsuarioBean.isOferente()) return forbidden();
 
-        Integer caracteristicaId = (Integer) body.get("caracteristicaId");
-        Integer nivel = (Integer) body.get("nivel");
+        Integer caracteristicaId = req.getCaracteristicaId();
+        Integer nivel = req.getNivel();
 
         // Validar datos basicos
         if (caracteristicaId == null || nivel == null)
@@ -126,15 +125,15 @@ public class OferenteController {
     public ResponseEntity<?> caracteristicas(@RequestParam(required = false) Integer actualId) {
         if (!sesionUsuarioBean.isOferente()) return forbidden();
 
-        Map<String, Object> resp = new HashMap<>();
+        CaracteristicasOferenteResponse resp = new CaracteristicasOferenteResponse();
         if (actualId == null) {
-            resp.put("subcategorias", modeloDatos.getCaracteristicaService().findRaices());
-            resp.put("actual", null);
+            resp.setSubcategorias(modeloDatos.getCaracteristicaService().findRaices());
+            resp.setActual(null);
         } else {
             Caracteristica actual = modeloDatos.getCaracteristicaService().findById(actualId);
             if (actual == null) return ResponseEntity.notFound().build();
-            resp.put("subcategorias", modeloDatos.getCaracteristicaService().findHijos(actualId));
-            resp.put("actual", actual);
+            resp.setSubcategorias(modeloDatos.getCaracteristicaService().findHijos(actualId));
+            resp.setActual(actual);
         }
         return ResponseEntity.ok(resp);
     }
@@ -154,12 +153,11 @@ public class OferenteController {
             puestos = (List<Puesto>) modeloDatos.getPuestoService().findActivosAmbostiposPorCaracteristicas(caracteristicaIds);
         }
 
-        // Construir respuesta con puestos, raices del arbol, tipo de cambio y filtros activos
-        Map<String, Object> resp = new HashMap<>();
-        resp.put("puestos", enriquecerPuestos(puestos));
-        resp.put("raices", modeloDatos.getCaracteristicaService().findRaices());
-        resp.put("tipoCambio", obtenerTipoCambio());
-        resp.put("caracteristicaIds", caracteristicaIds);
+        BuscarPuestosResponse resp = new BuscarPuestosResponse();
+        resp.setPuestos(enriquecerPuestos(puestos));
+        resp.setRaices(modeloDatos.getCaracteristicaService().findRaices());
+        resp.setTipoCambio(obtenerTipoCambio());
+        resp.setCaracteristicaIds(caracteristicaIds);
         return ResponseEntity.ok(resp);
     }
 
@@ -172,12 +170,11 @@ public class OferenteController {
         if (puesto == null || !puesto.getActivo())
             return ResponseEntity.notFound().build();
 
-        // Cargar caracteristicas del puesto
         puesto.setCaracteristicas(modeloDatos.getPuestoCaracteristicaService().findByPuesto(id));
 
-        Map<String, Object> resp = new HashMap<>();
-        resp.put("puesto", puesto);
-        resp.put("tipoCambio", obtenerTipoCambio());
+        DetallePuestoResponse resp = new DetallePuestoResponse();
+        resp.setPuesto(puesto);
+        resp.setTipoCambio(obtenerTipoCambio());
         return ResponseEntity.ok(resp);
     }
 
@@ -246,7 +243,9 @@ public class OferenteController {
             modeloDatos.getOferenteService()
                     .actualizarCurriculum(sesionUsuarioBean.getReferenciaId(), idSanitizado + ".pdf");
 
-            return ResponseEntity.ok(Map.of("ruta", idSanitizado + ".pdf"));
+            CvUploadResponse cvResp = new CvUploadResponse();
+            cvResp.setRuta(idSanitizado + ".pdf");
+            return ResponseEntity.ok(cvResp);
 
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al subir el archivo");

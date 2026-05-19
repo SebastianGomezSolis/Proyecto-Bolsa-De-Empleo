@@ -1,23 +1,17 @@
 package una.sistema.proyectobolsaempleobackend.dto;
 
-import lombok.Getter;
-import lombok.Setter;
-
-// DTO para el registro de un nuevo administrador.
-// Contiene los datos necesarios para crear un administrador y su usuario.
-// Este DTO se usa para registro de admins adicionales (no el inicial).
-@Getter
-@Setter
 public class RegistroAdminRequest {
-    // Correo electronico unico para la cuenta del administrador
     private String correo;
-
-    // Contrasena para la cuenta (se almacenara hasheada)
     private String clave;
-
-    // Numero de identificacion unico del administrador
     private String identificacion;
-
-    // Nombre completo del administrador
     private String nombre;
+
+    public String getCorreo() { return correo; }
+    public void setCorreo(String correo) { this.correo = correo; }
+    public String getClave() { return clave; }
+    public void setClave(String clave) { this.clave = clave; }
+    public String getIdentificacion() { return identificacion; }
+    public void setIdentificacion(String identificacion) { this.identificacion = identificacion; }
+    public String getNombre() { return nombre; }
+    public void setNombre(String nombre) { this.nombre = nombre; }
 }
