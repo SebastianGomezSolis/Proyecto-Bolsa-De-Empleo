@@ -9,37 +9,28 @@ import una.sistema.proyectobolsaempleobackend.logic.model.Puesto;
 
 import java.util.List;
 
-// Controller para endpoints publicos.
-// Proporciona acceso a puestos publicos sin necesidad de autenticacion.
-// Incluye busqueda, detalle de puestos, nacionalidades y caracteristicas.
 @RestController
 @RequestMapping("/api/publico")
 public class PublicoController {
-    // Acceso centralizado a todos los servicios
     @Autowired
     private ModeloDatos modeloDatos;
 
-    // Retorna todos los puestos publicos activos.
-    // Incluye las caracteristicas de cada puesto y el tipo de cambio.
     @GetMapping("/puestos")
     public PuestosPublicosResponse puestosPublicos() {
-        PuestosPublicosResponse resp = new PuestosPublicosResponse();
-        resp.setPuestos(enriquecerPuestos(modeloDatos.getPuestoService().findPublicosActivos()));
-        resp.setTipoCambio(obtenerTipoCambio());
-        return resp;
+        return new PuestosPublicosResponse(
+                enriquecerPuestos(modeloDatos.getPuestoService().findPublicosActivos()),
+                obtenerTipoCambio()
+        );
     }
 
-    // Retorna los ultimos 5 puestos publicos ordenados por fecha de publicacion.
     @GetMapping("/puestos/ultimos")
     public PuestosPublicosResponse ultimosPuestosPublicos() {
-        PuestosPublicosResponse resp = new PuestosPublicosResponse();
-        resp.setPuestos(enriquecerPuestos(modeloDatos.getPuestoService().findUltimos5Publicos()));
-        resp.setTipoCambio(obtenerTipoCambio());
-        return resp;
+        return new PuestosPublicosResponse(
+                enriquecerPuestos(modeloDatos.getPuestoService().findUltimos5Publicos()),
+                obtenerTipoCambio()
+        );
     }
 
-    // Busca puestos publicos que contengan alguna de las caracteristicas especificadas.
-    // Retorna puestos enriquecidos con sus caracteristicas.
     @GetMapping("/puestos/buscar")
     public BuscarPuestosResponse buscarPuestosPublicos(
             @RequestParam(required = false) List<Integer> caracteristicaIds) {
@@ -55,16 +46,14 @@ public class PublicoController {
                     .toList();
         }
 
-        BuscarPuestosResponse resp = new BuscarPuestosResponse();
-        resp.setPuestos(enriquecerPuestos(puestos));
-        resp.setRaices(modeloDatos.getCaracteristicaService().findRaices());
-        resp.setTipoCambio(obtenerTipoCambio());
-        resp.setCaracteristicaIds(caracteristicaIds);
-        return resp;
+        return new BuscarPuestosResponse(
+                enriquecerPuestos(puestos),
+                modeloDatos.getCaracteristicaService().findRaices(),
+                obtenerTipoCambio(),
+                caracteristicaIds
+        );
     }
 
-    // Retorna el detalle de un puesto publico especifico.
-    // Debe estar activo y ser de tipo "publico".
     @GetMapping("/puestos/{id}")
     public ResponseEntity<?> detallePuesto(@PathVariable Integer id) {
         Puesto puesto = modeloDatos.getPuestoService().findById(id);
@@ -72,22 +61,14 @@ public class PublicoController {
             return ResponseEntity.notFound().build();
 
         puesto.setCaracteristicas(modeloDatos.getPuestoCaracteristicaService().findByPuesto(id));
-
-        DetallePuestoResponse resp = new DetallePuestoResponse();
-        resp.setPuesto(puesto);
-        resp.setTipoCambio(obtenerTipoCambio());
-        return ResponseEntity.ok(resp);
+        return ResponseEntity.ok(new DetallePuestoResponse(puesto, obtenerTipoCambio()));
     }
 
-    // Retorna todas las nacionalidades disponibles.
-    // Usado para el formulario de registro de oferentes.
     @GetMapping("/nacionalidades")
     public ResponseEntity<?> nacionalidades() {
         return ResponseEntity.ok(modeloDatos.getNacionalidadService().findAll());
     }
 
-    // Retorna las caracteristicas raiz o los hijos de una padre especifico.
-    // Se usa para construir el arbol de seleccion en el frontend.
     @GetMapping("/caracteristicas")
     public ResponseEntity<?> caracteristicas(@RequestParam(required = false) Integer padreId) {
         if (padreId == null) {
@@ -96,14 +77,12 @@ public class PublicoController {
         return ResponseEntity.ok(modeloDatos.getCaracteristicaService().findHijos(padreId));
     }
 
-    // Agrega las caracteristicas a cada puesto para enviar al frontend
     private List<Puesto> enriquecerPuestos(List<Puesto> puestos) {
         puestos.forEach(p -> p.setCaracteristicas(
                 modeloDatos.getPuestoCaracteristicaService().findByPuesto(p.getId())));
         return puestos;
     }
 
-    // Obtiene el tipo de cambio del dolar, manejando errores
     private Object obtenerTipoCambio() {
         try {
             return modeloDatos.getTipoCambioServicio().obtenerTipoCambio();

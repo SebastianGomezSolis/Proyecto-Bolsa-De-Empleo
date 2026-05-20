@@ -11,18 +11,12 @@ import una.sistema.proyectobolsaempleobackend.logic.model.Puesto;
 
 import java.util.List;
 
-// Controller para busqueda publica de puestos.
-// Proporciona un endpoint para buscar puestos publicos por caracteristicas
-// sin necesidad de autenticacion.
 @RestController
 @RequestMapping("/api")
 public class PuestosController {
-    // Acceso centralizado a todos los servicios
     @Autowired
     private ModeloDatos modeloDatos;
 
-    // Busca puestos publicos activos que contengan alguna de las caracteristicas especificadas.
-    // Retorna los puestos con sus caracteristicas, las raices del arbol y el tipo de cambio.
     @GetMapping("/puestos/buscar")
     public BuscarPuestosResponse buscarPuestos(@RequestParam(required = false) List<Integer> caracteristicaIds) {
         List<Puesto> puestos;
@@ -35,22 +29,20 @@ public class PuestosController {
                     .toList();
         }
 
-        BuscarPuestosResponse resp = new BuscarPuestosResponse();
-        resp.setRaices(modeloDatos.getCaracteristicaService().findRaices());
-        resp.setCaracteristicaIds(caracteristicaIds);
-        resp.setTipoCambio(obtenerTipoCambio());
-        resp.setPuestos(enriquecerPuestos(puestos));
-        return resp;
+        return new BuscarPuestosResponse(
+                enriquecerPuestos(puestos),
+                modeloDatos.getCaracteristicaService().findRaices(),
+                obtenerTipoCambio(),
+                caracteristicaIds
+        );
     }
 
-    // Agrega las caracteristicas a cada puesto para enviar al frontend
     private List<Puesto> enriquecerPuestos(List<Puesto> puestos) {
         puestos.forEach(p -> p.setCaracteristicas(
                 modeloDatos.getPuestoCaracteristicaService().findByPuesto(p.getId())));
         return puestos;
     }
 
-    // Obtiene el tipo de cambio del dolar, manejando errores
     private Object obtenerTipoCambio() {
         try {
             return modeloDatos.getTipoCambioServicio().obtenerTipoCambio();

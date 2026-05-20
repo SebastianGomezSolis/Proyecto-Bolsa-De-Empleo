@@ -10,6 +10,15 @@ public class CaracteristicasAdminResponse {
     private List<Caracteristica> ruta;
     private List<Caracteristica> todas;
 
+    public CaracteristicasAdminResponse() {}
+
+    public CaracteristicasAdminResponse(List<Caracteristica> subcategorias, Caracteristica actual, List<Caracteristica> ruta, List<Caracteristica> todas) {
+        this.subcategorias = subcategorias;
+        this.actual = actual;
+        this.ruta = ruta;
+        this.todas = todas;
+    }
+
     public List<Caracteristica> getSubcategorias() { return subcategorias; }
     public void setSubcategorias(List<Caracteristica> subcategorias) { this.subcategorias = subcategorias; }
     public Caracteristica getActual() { return actual; }

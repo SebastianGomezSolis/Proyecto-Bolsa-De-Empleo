@@ -6,6 +6,15 @@ public class SesionResponse {
     private String rol;
     private Integer referenciaId;
 
+    public SesionResponse() {}
+
+    public SesionResponse(Integer id, String correo, String rol, Integer referenciaId) {
+        this.id = id;
+        this.correo = correo;
+        this.rol = rol;
+        this.referenciaId = referenciaId;
+    }
+
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
     public String getCorreo() { return correo; }

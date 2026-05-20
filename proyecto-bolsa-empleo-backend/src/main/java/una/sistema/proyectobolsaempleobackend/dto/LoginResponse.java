@@ -7,6 +7,16 @@ public class LoginResponse {
     private Integer referenciaId;
     private String token;
 
+    public LoginResponse() {}
+
+    public LoginResponse(Integer id, String correo, String rol, Integer referenciaId, String token) {
+        this.id = id;
+        this.correo = correo;
+        this.rol = rol;
+        this.referenciaId = referenciaId;
+        this.token = token;
+    }
+
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
     public String getCorreo() { return correo; }

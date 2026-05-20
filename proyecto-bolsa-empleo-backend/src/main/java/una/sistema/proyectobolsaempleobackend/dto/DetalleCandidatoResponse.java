@@ -10,6 +10,14 @@ public class DetalleCandidatoResponse {
     private List<Habilidad> habilidades;
     private Object puesto;
 
+    public DetalleCandidatoResponse() {}
+
+    public DetalleCandidatoResponse(Oferente oferente, List<Habilidad> habilidades, Object puesto) {
+        this.oferente = oferente;
+        this.habilidades = habilidades;
+        this.puesto = puesto;
+    }
+
     public Oferente getOferente() { return oferente; }
     public void setOferente(Oferente oferente) { this.oferente = oferente; }
     public List<Habilidad> getHabilidades() { return habilidades; }

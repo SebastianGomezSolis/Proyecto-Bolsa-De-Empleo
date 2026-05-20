@@ -1,8 +1,10 @@
 package una.sistema.proyectobolsaempleobackend.controllers;
 
+import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import una.sistema.proyectobolsaempleobackend.dto.*;
 import una.sistema.proyectobolsaempleobackend.logic.ModeloDatos;
@@ -20,29 +22,20 @@ public class AuthController {
     @Autowired
     private JwtService jwtService;
 
-    @Autowired
-    private SesionUsuarioBean sesionUsuarioBean;
-
     @PostMapping("/login")
     public LoginResponse login(@RequestBody LoginRequest request) {
         Usuario usuario = modeloDatos.getAuthService().login(request);
         if (usuario == null) {
             throw new RuntimeException("Credenciales inválidas");
         }
-        Integer referenciaId = sesionUsuarioBean.getReferenciaId();
+        Integer referenciaId = modeloDatos.getAuthService().resolverReferenciaId(usuario);
         String token = jwtService.generarToken(usuario.getId(), usuario.getCorreo(), usuario.getRol(), referenciaId);
-        LoginResponse resp = new LoginResponse();
-        resp.setId(usuario.getId());
-        resp.setCorreo(usuario.getCorreo());
-        resp.setRol(usuario.getRol().name());
-        resp.setReferenciaId(referenciaId);
-        resp.setToken(token);
-        return resp;
+        return new LoginResponse(usuario.getId(), usuario.getCorreo(), usuario.getRol().name(), referenciaId, token);
     }
 
     @PostMapping("/logout")
-    public void logout() {
-        modeloDatos.getAuthService().logout();
+    public ResponseEntity<?> logout() {
+        return ResponseEntity.ok("Sesión cerrada");
     }
 
     @PostMapping("/registro/empresa")
@@ -87,16 +80,17 @@ public class AuthController {
     }
 
     @GetMapping("/sesion")
-    public SesionResponse sesion() {
-        if (!sesionUsuarioBean.isLogueado()) {
-            throw new RuntimeException("No hay sesión activa");
+    public ResponseEntity<?> sesion() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || !(auth.getPrincipal() instanceof Claims claims)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "No hay sesión activa"));
         }
-        SesionResponse resp = new SesionResponse();
-        resp.setId(sesionUsuarioBean.getId());
-        resp.setCorreo(sesionUsuarioBean.getCorreo());
-        resp.setRol(sesionUsuarioBean.getRol().name());
-        resp.setReferenciaId(sesionUsuarioBean.getReferenciaId());
-        return resp;
+        return ResponseEntity.ok(new SesionResponse(
+                claims.get("id", Integer.class),
+                claims.getSubject(),
+                claims.get("rol", String.class),
+                claims.get("referenciaId", Integer.class)
+        ));
     }
 
     @ExceptionHandler(RuntimeException.class)

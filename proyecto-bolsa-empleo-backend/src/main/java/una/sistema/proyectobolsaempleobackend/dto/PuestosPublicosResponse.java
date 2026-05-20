@@ -8,6 +8,13 @@ public class PuestosPublicosResponse {
     private List<Puesto> puestos;
     private Object tipoCambio;
 
+    public PuestosPublicosResponse() {}
+
+    public PuestosPublicosResponse(List<Puesto> puestos, Object tipoCambio) {
+        this.puestos = puestos;
+        this.tipoCambio = tipoCambio;
+    }
+
     public List<Puesto> getPuestos() { return puestos; }
     public void setPuestos(List<Puesto> puestos) { this.puestos = puestos; }
     public Object getTipoCambio() { return tipoCambio; }
