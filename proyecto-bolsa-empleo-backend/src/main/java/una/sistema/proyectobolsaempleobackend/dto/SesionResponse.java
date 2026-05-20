@@ -6,8 +6,6 @@ public class SesionResponse {
     private String rol;
     private Integer referenciaId;
 
-    public SesionResponse() {}
-
     public SesionResponse(Integer id, String correo, String rol, Integer referenciaId) {
         this.id = id;
         this.correo = correo;

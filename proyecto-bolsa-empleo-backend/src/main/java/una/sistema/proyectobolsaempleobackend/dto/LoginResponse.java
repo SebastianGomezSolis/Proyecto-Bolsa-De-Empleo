@@ -7,8 +7,6 @@ public class LoginResponse {
     private Integer referenciaId;
     private String token;
 
-    public LoginResponse() {}
-
     public LoginResponse(Integer id, String correo, String rol, Integer referenciaId, String token) {
         this.id = id;
         this.correo = correo;

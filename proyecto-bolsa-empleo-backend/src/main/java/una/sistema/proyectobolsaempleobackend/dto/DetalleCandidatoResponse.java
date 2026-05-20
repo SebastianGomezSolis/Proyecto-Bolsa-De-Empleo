@@ -10,8 +10,6 @@ public class DetalleCandidatoResponse {
     private List<Habilidad> habilidades;
     private Object puesto;
 
-    public DetalleCandidatoResponse() {}
-
     public DetalleCandidatoResponse(Oferente oferente, List<Habilidad> habilidades, Object puesto) {
         this.oferente = oferente;
         this.habilidades = habilidades;

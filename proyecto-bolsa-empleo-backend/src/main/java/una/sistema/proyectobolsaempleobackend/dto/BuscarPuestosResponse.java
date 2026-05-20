@@ -11,8 +11,6 @@ public class BuscarPuestosResponse {
     private Object tipoCambio;
     private List<Integer> caracteristicaIds;
 
-    public BuscarPuestosResponse() {}
-
     public BuscarPuestosResponse(List<Puesto> puestos, List<Caracteristica> raices, Object tipoCambio, List<Integer> caracteristicaIds) {
         this.puestos = puestos;
         this.raices = raices;

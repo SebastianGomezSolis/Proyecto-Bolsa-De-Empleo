@@ -8,8 +8,6 @@ public class PuestosPublicosResponse {
     private List<Puesto> puestos;
     private Object tipoCambio;
 
-    public PuestosPublicosResponse() {}
-
     public PuestosPublicosResponse(List<Puesto> puestos, Object tipoCambio) {
         this.puestos = puestos;
         this.tipoCambio = tipoCambio;

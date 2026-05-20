@@ -6,8 +6,6 @@ public class DetallePuestoResponse {
     private Puesto puesto;
     private Object tipoCambio;
 
-    public DetallePuestoResponse() {}
-
     public DetallePuestoResponse(Puesto puesto, Object tipoCambio) {
         this.puesto = puesto;
         this.tipoCambio = tipoCambio;

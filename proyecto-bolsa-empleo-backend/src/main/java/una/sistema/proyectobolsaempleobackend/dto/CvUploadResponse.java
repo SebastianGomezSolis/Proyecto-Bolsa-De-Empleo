@@ -3,8 +3,6 @@ package una.sistema.proyectobolsaempleobackend.dto;
 public class CvUploadResponse {
     private String ruta;
 
-    public CvUploadResponse() {}
-
     public CvUploadResponse(String ruta) {
         this.ruta = ruta;
     }
