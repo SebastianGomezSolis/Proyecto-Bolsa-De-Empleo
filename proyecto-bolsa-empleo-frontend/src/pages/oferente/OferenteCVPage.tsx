@@ -1,20 +1,39 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import SectionTitle from '../../components/SectionTitle';
 import LoadingBlock from '../../components/LoadingBlock';
-import { BASE_API, getAuthHeaders, descargarPDF } from '../../services/api';
-import { Sesion, MensajeGlobal, OferentePerfil } from '../../types';
+
+
+interface MensajeGlobal {
+  tipo: 'success' | 'error' | 'info' | 'warning' | 'danger';
+  texto: string;
+}
+
+interface OferentePerfil {
+  id: number;
+  identificacion: string;
+  nombre: string;
+  primerApellido: string;
+  telefono: string;
+  lugarResidencia: string;
+  curriculum: string;
+  usuario: { id: number; correo: string };
+}
 
 interface Props {
-  // Sesión actual del usuario (se usa para verificar rol de oferente)
-  sesion: Sesion | null;
-  // Función de navegación para redirigir al usuario a otras páginas
-  onNavegar: (ruta: string) => void;
   // Función de callback para mostrar mensajes globales (éxito/error)
   onMensaje: (m: MensajeGlobal) => void;
 }
 
 // Componente principal para gestionar el CV del oferente
-function OferenteCVPage({ sesion, onNavegar, onMensaje }: Props) {
+function OferenteCVPage({ onMensaje }: Props) {
+  const navigate = useNavigate();
+  const descargar = async (url: string) => {
+    const res = await fetch(url, { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
+    if (!res.ok) { onMensaje({ tipo: 'danger', texto: await res.text() }); return; }
+    const blob = await res.blob();
+    window.open(URL.createObjectURL(blob), '_blank');
+  };
   // Perfil del oferente (incluye la ruta del CV si existe)
   const [oferente, setOferente] = useState<OferentePerfil | null>(null);
   // Controla si se muestra el formulario para subir un nuevo CV
@@ -28,22 +47,11 @@ function OferenteCVPage({ sesion, onNavegar, onMensaje }: Props) {
 
   // Effect para cargar el perfil del oferente al montar el componente
   useEffect(() => {
-    if (!sesion || sesion.rol !== 'OFERENTE') return;
-    fetch(`${BASE_API}/oferente/perfil`, { headers: getAuthHeaders() })
+    fetch("http://localhost:8080/api/oferente/perfil", { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) })
       .then(async (res) => { if (res.ok) setOferente(await res.json()); else throw new Error(await res.text()); })
       .catch((e: Error) => onMensaje({ tipo: 'danger', texto: e.message }))
       .finally(() => setCargando(false));
-  }, [sesion, onMensaje]);
-
-  // Verificar que el usuario esté autenticado y tenga rol de oferente
-  if (!sesion || sesion.rol !== 'OFERENTE') {
-    return (
-      <section className="container py-5">
-        <div className="alert alert-warning">Acceso restringido a oferentes autorizados.</div>
-        <button className="btn btn-outline-secondary" onClick={() => onNavegar('/')}>Volver</button>
-      </section>
-    );
-  }
+  }, [onMensaje]);
 
   // Subir el archivo CV al backend
   const subirCV = async (e: React.FormEvent) => {
@@ -52,11 +60,11 @@ function OferenteCVPage({ sesion, onNavegar, onMensaje }: Props) {
     setSubiendo(true);
     try {
       const fd = new FormData(); fd.append('archivo', archivo);
-      const subirRes = await fetch(`${BASE_API}/oferente/cv/subir`, { method: 'POST', body: fd, headers: getAuthHeaders() });
+      const subirRes = await fetch("http://localhost:8080/api/oferente/cv/subir", { method: 'POST', body: fd, headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
       if (!subirRes.ok) throw new Error(await subirRes.text());
       onMensaje({ tipo: 'success', texto: 'CV subido correctamente.' });
       setMostrarSubir(false);
-      const perfilRes = await fetch(`${BASE_API}/oferente/perfil`, { headers: getAuthHeaders() });
+      const perfilRes = await fetch("http://localhost:8080/api/oferente/perfil", { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
       if (!perfilRes.ok) throw new Error(await perfilRes.text());
       const perfil = await perfilRes.json();
       setOferente(perfil);
@@ -76,7 +84,7 @@ function OferenteCVPage({ sesion, onNavegar, onMensaje }: Props) {
           {/* Botones para ver y subir CV */}
           <div className="d-flex gap-2 mb-4">
             {oferente?.curriculum ? (
-              <button className="btn btn-dark" onClick={() => descargarPDF(`${BASE_API}/oferente/cv`)}>Ver CV</button>
+              <button className="btn btn-dark" onClick={() => descargar("http://localhost:8080/api/oferente/cv")}>Ver CV</button>
             ) : (
               <button className="btn btn-dark" disabled>Ver CV</button>
             )}

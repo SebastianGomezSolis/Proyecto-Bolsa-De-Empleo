@@ -1,4 +1,9 @@
-import { Caracteristica } from '../types';
+interface Caracteristica {
+  id: number;
+  nombre: string;
+  padreId: number | null;
+  hijos: Caracteristica[];
+}
 
 interface NodoProps {
   // Nodo (característica) a renderizar, puede ser hoja o tener hijos

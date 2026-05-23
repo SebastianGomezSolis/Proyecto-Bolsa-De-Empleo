@@ -1,29 +1,37 @@
-// Página de registro de oferente (candidato).
-// Permite crear una cuenta con datos personales y nacionalidad.
-// El registro queda pendiente de aprobación por un administrador.
-
 import { useEffect, useState } from 'react';
-import { BASE_API, getAuthHeaders } from '../../services/api';
-import { MensajeGlobal, Nacionalidad } from '../../types';
+import { useNavigate } from 'react-router-dom';
 
-// Valores iniciales del formulario
+interface MensajeGlobal {
+  tipo: 'success' | 'error' | 'info' | 'warning' | 'danger';
+  texto: string;
+}
+
+interface Nacionalidad {
+  iso: string;
+  nombre: string;
+  descripcion: string | null;
+  iso3: string | null;
+  codigoNumero: number | null;
+  codigoTelefono: number | null;
+}
+
 const FORM_OFERENTE = { correo: '', clave: '', identificacion: '', nombre: '', primerApellido: '', isoNacionalidad: '', telefono: '', lugarResidencia: '' };
 
 interface Props {
-  onNavegar: (ruta: string) => void;
   onMensaje: (m: MensajeGlobal) => void;
 }
 
 type FormValues = Record<string, string>;
 
-function RegistroOferentePage({ onNavegar, onMensaje }: Props) {
+function RegistroOferentePage({ onMensaje }: Props) {
+  const navigate = useNavigate();
   const [form, setForm] = useState<FormValues>({ ...FORM_OFERENTE });
   const [nacionalidades, setNacionalidades] = useState<Nacionalidad[]>([]);
   const [cargando, setCargando] = useState(false);
 
   // Cargar lista de nacionalidades al montar el componente
   useEffect(() => {
-    fetch(`${BASE_API}/publico/nacionalidades`, { headers: getAuthHeaders() })
+    fetch("http://localhost:8080/api/publico/nacionalidades")
       .then(async (res) => { if (res.ok) setNacionalidades(await res.json()); })
       .catch(() => {});
   }, []);
@@ -36,14 +44,14 @@ function RegistroOferentePage({ onNavegar, onMensaje }: Props) {
     e.preventDefault();
     setCargando(true);
     try {
-      const response = await fetch(`${BASE_API}/auth/registro/oferente`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      const response = await fetch("http://localhost:8080/api/auth/registro/oferente", {
+        method: "POST",
+        headers: new Headers({ "Content-Type": "application/json" }),
         body: JSON.stringify(form),
       });
       if (!response.ok) throw new Error(await response.text());
       onMensaje({ tipo: 'success', texto: 'Registro exitoso. Espere la aprobación del administrador.' });
-      onNavegar('/login');
+      navigate('/login');
     } catch (error) {
       onMensaje({ tipo: 'danger', texto: (error as Error).message });
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -115,13 +123,13 @@ function RegistroOferentePage({ onNavegar, onMensaje }: Props) {
 
               <p className="text-center mt-3 mb-0">
                 ¿Ya tiene una cuenta?{' '}
-                <a href="/login" onClick={(e) => { e.preventDefault(); onNavegar('/login'); }} style={{ cursor: 'pointer' }}>
+                <a href="/login" onClick={(e) => { e.preventDefault(); navigate('/login'); }} style={{ cursor: 'pointer' }}>
                   Iniciar sesión
                 </a>
               </p>
               <p className="text-center mb-0">
                 ¿Es una empresa?{' '}
-                <a href="/registro/empresa" onClick={(e) => { e.preventDefault(); onNavegar('/registro/empresa'); }} style={{ cursor: 'pointer' }}>
+                <a href="/registro/empresa" onClick={(e) => { e.preventDefault(); navigate('/registro/empresa'); }} style={{ cursor: 'pointer' }}>
                   Registrarse como empresa
                 </a>
               </p>

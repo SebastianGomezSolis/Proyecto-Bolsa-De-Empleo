@@ -5,19 +5,37 @@
 import { useCallback, useEffect, useState } from 'react';
 import SectionTitle from '../../components/SectionTitle';
 import LoadingBlock from '../../components/LoadingBlock';
-import { BASE_API, getAuthHeaders } from '../../services/api';
-import { Sesion, MensajeGlobal, Caracteristica } from '../../types';
+
+interface MensajeGlobal {
+  tipo: 'success' | 'error' | 'info' | 'warning' | 'danger';
+  texto: string;
+}
+
+interface Caracteristica {
+  id: number;
+  nombre: string;
+  padreId: number | null;
+  hijos: Caracteristica[];
+}
+
+interface CaracteristicasAdminResponse {
+  subcategorias: Caracteristica[];
+  ruta: Caracteristica[];
+  actual: Caracteristica | null;
+  todas: Caracteristica[];
+}
+
+interface CaracteristicasOferenteResponse {
+  subcategorias: Caracteristica[];
+  ruta: Caracteristica[];
+  actual: Caracteristica | null;
+}
 
 interface Props {
-  // Sesión actual del usuario (se usa para verificar rol de administrador)
-  sesion: Sesion | null;
-  // Función de navegación para redirigir al usuario a otras páginas
-  onNavegar: (ruta: string) => void;
-  // Función de callback para mostrar mensajes globales (éxito/error)
   onMensaje: (m: MensajeGlobal) => void;
 }
 
-function AdminCaracteristicasPage({ sesion, onNavegar, onMensaje }: Props) {
+function AdminCaracteristicasPage({ onMensaje }: Props) {
   // Estado para almacenar las características hijas (subcategorías) del nodo actual
   const [subcategorias, setSubcategorias] = useState<Caracteristica[]>([]);
   // Estado para almacenar la ruta de navegación desde la raíz hasta el padre del nodo actual
@@ -38,7 +56,7 @@ function AdminCaracteristicasPage({ sesion, onNavegar, onMensaje }: Props) {
   const cargarNodo = useCallback(async (actualId: number | null = null) => {
     try {
       // Llamada al backend para obtener características y metadata de navegación
-      const res = await fetch(`${BASE_API}/admin/caracteristicas${actualId != null ? `?actualId=${actualId}` : ''}`, { headers: getAuthHeaders() });
+      const res = await fetch(`http://localhost:8080/api/admin/caracteristicas${actualId != null ? `?actualId=${actualId}` : ''}`, { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
       if (!res.ok) throw new Error(await res.text());
       const resp = await res.json();
       // Actualizar estados con los datos recibidos
@@ -52,40 +70,21 @@ function AdminCaracteristicasPage({ sesion, onNavegar, onMensaje }: Props) {
     }
   }, [onMensaje]);
 
-  // Effect que se ejecuta cuando cambia la sesión o la función cargarNodo
-  // Se encarga de cargar inicialmente el árbol de características
   useEffect(() => {
-    let cancelled = false; // Flag para evitar actualizaciones en componentes desmontados
+    let cancelled = false;
 
     (async () => {
-      // Verificar que el usuario sea administrador antes de proceder
-      if (!sesion || sesion.rol !== 'ADMIN') return;
-      await Promise.resolve();
       if (cancelled) return;
-
       setCargando(true);
       try {
-        // Cargar inicialmente el árbol desde la raíz
         await cargarNodo(null);
       } finally {
-        // Actualizar estado de carga solo si el componente no fue cancelado
         if (!cancelled) setCargando(false);
       }
     })();
 
-    // Limpiar el flag de cancelación cuando el efecto se limpie
     return () => { cancelled = true; };
-  }, [sesion, cargarNodo]);
-
-  // Redirección para usuarios no autenticados o que no son administradores
-  if (!sesion || sesion.rol !== 'ADMIN') {
-    return (
-      <section className="container py-5">
-        <div className="alert alert-danger">Acceso restringido a administradores.</div>
-        <button className="btn btn-outline-secondary" onClick={() => onNavegar('/')}>Volver</button>
-      </section>
-    );
-  }
+  }, [cargarNodo]);
 
   // Función para navegar hacia abajo en el árbol (entrar a una característica)
   const entrar = async (sub: Caracteristica) => {
@@ -114,7 +113,7 @@ function AdminCaracteristicasPage({ sesion, onNavegar, onMensaje }: Props) {
     if (!nombre.trim()) return; // Validar que el nombre no esté vacío
     try {
       // Llamada al backend para crear la característica
-      const res = await fetch(`${BASE_API}/admin/caracteristicas`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }, body: JSON.stringify({ nombre: nombre.trim(), padreId: actual?.id ?? null }) });
+      const res = await fetch("http://localhost:8080/api/admin/caracteristicas", { method: "POST", headers: new Headers({ "Content-Type": "application/json", "Authorization": "Bearer " + localStorage.getItem("token") }), body: JSON.stringify({ nombre: nombre.trim(), padreId: actual?.id ?? null }) });
       if (!res.ok) throw new Error(await res.text());
       onMensaje({ tipo: 'success', texto: 'Característica creada.' }); // Mostrar éxito
       setNombre(''); // Limpiar campo de nombre

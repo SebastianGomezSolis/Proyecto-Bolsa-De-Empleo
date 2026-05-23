@@ -4,9 +4,29 @@
 import { useEffect, useState } from 'react';
 import SectionTitle from '../../components/SectionTitle';
 import LoadingBlock from '../../components/LoadingBlock';
-import { BASE_API, getAuthHeaders } from '../../services/api';
 import { formatSalario, formatFecha } from '../../utils/formatters';
-import { MensajeGlobal, Puesto, PuestosResponse } from '../../types';
+
+interface MensajeGlobal {
+  tipo: 'success' | 'error' | 'info' | 'warning' | 'danger';
+  texto: string;
+}
+
+interface Puesto {
+  id: number;
+  descripcion: string;
+  salario: number;
+  tipoPublicacion: string;
+  empresa: { id: number; nombre: string; usuarioCorreo: string };
+  activo: boolean;
+  fechaRegistro: string;
+  caracteristicas: { id: number; nombre: string; nivelRequerido: number }[];
+  tipoCambio?: { compra: number; venta: number; fecha: string };
+}
+
+interface PuestosResponse {
+  puestos: Puesto[];
+  tipoCambio?: { compra: number; venta: number; fecha: string };
+}
 
 interface Props {
   // Función de callback para mostrar mensajes globales (éxito/error)
@@ -23,7 +43,7 @@ function PuestosPublicosPage({ onMensaje }: Props) {
 
   // Effect que carga todos los puestos públicos al montar el componente
   useEffect(() => {
-    fetch(`${BASE_API}/publico/puestos`, { headers: getAuthHeaders() })
+    fetch("http://localhost:8080/api/publico/puestos", { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) })
       .then(async (res) => { if (res.ok) return res.json(); throw new Error(await res.text()); })
       .then((res: PuestosResponse) => {
         setPuestos(res.puestos ?? []);

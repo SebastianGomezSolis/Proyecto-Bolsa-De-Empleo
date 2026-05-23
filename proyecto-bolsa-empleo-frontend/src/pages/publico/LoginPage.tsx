@@ -1,42 +1,42 @@
-// Página de inicio de sesión. Permite a los usuarios autenticarse con correo
-// y contraseña, con opción de recordar credenciales en localStorage.
-
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import SectionTitle from '../../components/SectionTitle';
-import { BASE_API, getAuthHeaders, guardarSesion } from '../../services/api';
-import { MensajeGlobal, Sesion } from '../../types';
+
+interface MensajeGlobal {
+  tipo: 'success' | 'error' | 'info' | 'warning' | 'danger';
+  texto: string;
+}
+
+function guardarSesion(datos: { id: number; correo: string; rol: string; referenciaId: number; token: string }): void {
+  localStorage.setItem('bolsa.session', JSON.stringify(datos));
+}
 
 interface Props {
-  // Función para actualizar la sesión global al iniciar sesión exitosamente
-  onSesion: (s: Sesion) => void;
-  // Función de navegación para redirigir al usuario a otras páginas
-  onNavegar: (ruta: string) => void;
-  // Función de callback para mostrar mensajes globales (éxito/error)
   onMensaje: (m: MensajeGlobal) => void;
 }
 
-function LoginPage({ onSesion, onNavegar, onMensaje }: Props) {
-  // Estado del formulario: correo y clave (inicializados desde localStorage si se recordaron)
+function LoginPage({ onMensaje }: Props) {
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     correo: localStorage.getItem('bolsa.correo') ?? '',
     clave: localStorage.getItem('bolsa.clave') ?? '',
   });
-  // Estado para recordar credenciales (checkbox)
   const [recordar, setRecordar] = useState(
     () => localStorage.getItem('bolsa.recordar') === 'true'
   );
-  // Estado para indicar si se está procesando el inicio de sesión
   const [cargando, setCargando] = useState(false);
 
-  // Función auxiliar para actualizar un campo específico del formulario
   const set = (campo: string, valor: string) => setForm((prev) => ({ ...prev, [campo]: valor }));
 
-  // Manejador del envío del formulario de login
   const manejarLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setCargando(true);
     try {
-      const response = await fetch(`${BASE_API}/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }, body: JSON.stringify({ correo: form.correo, clave: form.clave }) });
+      const response = await fetch("http://localhost:8080/api/auth/login", {
+        method: "POST",
+        headers: new Headers({ "Content-Type": "application/json" }),
+        body: JSON.stringify({ correo: form.correo, clave: form.clave })
+      });
       if (!response.ok) throw new Error(await response.text());
       const datos = await response.json();
 
@@ -51,10 +51,10 @@ function LoginPage({ onSesion, onNavegar, onMensaje }: Props) {
       }
 
       guardarSesion(datos);
-      onSesion(datos);
+      localStorage.setItem("token", datos.token);
       onMensaje({ tipo: 'success', texto: `Bienvenido, ${datos.correo}.` });
       const destinos: Record<string, string> = { ADMIN: '/admin/dashboard', EMPRESA: '/empresa/dashboard', OFERENTE: '/oferente/dashboard' };
-      onNavegar(destinos[datos.rol] || '/');
+      navigate(destinos[datos.rol] || '/');
     } catch (error) {
       onMensaje({ tipo: 'danger', texto: (error as Error).message });
     } finally {
@@ -63,7 +63,6 @@ function LoginPage({ onSesion, onNavegar, onMensaje }: Props) {
   };
 
   return (
-    // Render del formulario de inicio de sesión
     <section className="container py-5">
       <div className="row justify-content-center">
         <div className="col-lg-5 col-xl-4">

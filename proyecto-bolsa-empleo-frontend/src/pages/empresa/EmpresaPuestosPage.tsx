@@ -1,70 +1,58 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import SectionTitle from '../../components/SectionTitle';
 import LoadingBlock from '../../components/LoadingBlock';
-import { BASE_API, getAuthHeaders } from '../../services/api';
 import { formatSalario } from '../../utils/formatters';
-import { Sesion, MensajeGlobal, Puesto } from '../../types';
+
+
+interface MensajeGlobal {
+  tipo: 'success' | 'error' | 'info' | 'warning' | 'danger';
+  texto: string;
+}
+
+interface Puesto {
+  id: number;
+  descripcion: string;
+  salario: number;
+  tipoPublicacion: string;
+  empresa: { id: number; nombre: string; usuarioCorreo: string };
+  activo: boolean;
+  fechaRegistro: string;
+  caracteristicas: { id: number; nombre: string; nivelRequerido: number }[];
+  tipoCambio?: { compra: number; venta: number; fecha: string };
+}
 
 interface Props {
-  // Sesión actual del usuario (se usa para verificar rol de empresa)
-  sesion: Sesion | null;
-  // Función de navegación para redirigir al usuario a otras páginas
-  onNavegar: (ruta: string) => void;
-  // Función de callback para mostrar mensajes globales (éxito/error)
   onMensaje: (m: MensajeGlobal) => void;
 }
 
-// Componente principal para listar los puestos publicados por la empresa
-// Permite activar, desactivar y ver candidatos de cada puesto
-function EmpresaPuestosPage({ sesion, onNavegar, onMensaje }: Props) {
-  // Estado para almacenar la lista de puestos de la empresa
+function EmpresaPuestosPage({ onMensaje }: Props) {
+  const navigate = useNavigate();
   const [puestos, setPuestos] = useState<Puesto[]>([]);
-  // Estado para indicar si se está cargando datos desde el backend
   const [cargando, setCargando] = useState(true);
 
-  // Función memoizada para cargar la lista de puestos de la empresa
-  // useCallback evita recrear la función en cada render
   const cargar = useCallback(() => {
-    setCargando(true); // Indicar que comenzó la carga
-    fetch(`${BASE_API}/empresa/puestos`, { headers: getAuthHeaders() })
+    setCargando(true);
+    fetch("http://localhost:8080/api/empresa/puestos", { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) })
       .then(async (res) => { if (res.ok) setPuestos(await res.json()); else throw new Error(await res.text()); })
       .catch((e: Error) => onMensaje({ tipo: 'danger', texto: e.message }))
       .finally(() => setCargando(false));
   }, [onMensaje]);
 
-  // Effect que se ejecuta al montar el componente o cuando cambia la sesión
-  // Se encarga de cargar inicialmente los puestos de la empresa
   useEffect(() => {
-    // Solo proceder si el usuario es una empresa
-    if (sesion?.rol !== 'EMPRESA') return;
     let cancelled = false;
-
     (async () => {
       await Promise.resolve();
       if (cancelled) return;
       cargar();
     })();
-
-    // Limpiar la bandera cancelled cuando el componente se desmonte
     return () => { cancelled = true; };
-  }, [sesion, cargar]);
+  }, [cargar]);
 
-  // Verificar si el usuario tiene sesión activa y rol de empresa
-  // Si no cumple, mostrar mensaje de acceso restringido con botón para volver
-  if (!sesion || sesion.rol !== 'EMPRESA') {
-    return (
-      <section className="container py-5">
-        <div className="alert alert-warning">Acceso restringido a empresas autorizadas.</div>
-        <button className="btn btn-outline-secondary" onClick={() => onNavegar('/')}>Volver</button>
-      </section>
-    );
-  }
-
-  // Función para desactivar un puesto (lo oculta de las búsquedas)
   const desactivar = async (id: number) => {
     if (!window.confirm('¿Desactivar este puesto?')) return;
     try {
-      const res = await fetch(`${BASE_API}/empresa/puestos/${id}/desactivar`, { method: 'POST', headers: getAuthHeaders() });
+      const res = await fetch(`http://localhost:8080/api/empresa/puestos/${id}/desactivar`, { method: 'POST', headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
       if (!res.ok) throw new Error(await res.text());
       onMensaje({ tipo: 'success', texto: 'Puesto desactivado.' });
       cargar(); // Recargar la lista para reflejar el cambio
@@ -76,7 +64,7 @@ function EmpresaPuestosPage({ sesion, onNavegar, onMensaje }: Props) {
   // Función para activar un puesto desactivado
   const activar = async (id: number) => {
     try {
-      const res = await fetch(`${BASE_API}/empresa/puestos/${id}/activar`, { method: 'POST', headers: getAuthHeaders() });
+      const res = await fetch(`http://localhost:8080/api/empresa/puestos/${id}/activar`, { method: 'POST', headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
       if (!res.ok) throw new Error(await res.text());
       onMensaje({ tipo: 'success', texto: 'Puesto activado.' });
       cargar(); // Recargar la lista para reflejar el cambio
@@ -90,7 +78,7 @@ function EmpresaPuestosPage({ sesion, onNavegar, onMensaje }: Props) {
       <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
         <SectionTitle eyebrow="Empresa" title="Mis puestos" />
         {/* Botón para navegar a la página de publicación de nuevo puesto */}
-        <button className="btn btn-primary" onClick={() => onNavegar('/empresa/publicar')}>+ Publicar puesto</button>
+        <button className="btn btn-primary" onClick={() => navigate('/empresa/publicar')}>+ Publicar puesto</button>
       </div>
 
       {cargando ? <LoadingBlock /> : (
@@ -136,7 +124,7 @@ function EmpresaPuestosPage({ sesion, onNavegar, onMensaje }: Props) {
                       {/* Botón para buscar candidatos (solo disponible si el puesto está activo) */}
                       {p.activo ? (
                         <button className="btn btn-dark btn-sm"
-                          onClick={() => onNavegar(`/empresa/puestos/${p.id}/candidatos`)}>
+                          onClick={() => navigate(`/empresa/puestos/${p.id}/candidatos`)}>
                           Buscar candidatos
                         </button>
                       ) : (

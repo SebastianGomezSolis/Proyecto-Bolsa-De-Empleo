@@ -1,9 +1,12 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
+import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import './index.css';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import GlobalBanner from './components/GlobalBanner';
 import AlertaMensaje from './components/AlertaMensaje';
+import ProtectedRoute from './components/ProtectedRoute';
+import AccesoRestringido from './components/AccesoRestringido';
 import HomePage from './pages/publico/HomePage';
 import LoginPage from './pages/publico/LoginPage';
 import RegistroEmpresaPage from './pages/publico/RegistroEmpresaPage';
@@ -23,132 +26,90 @@ import DashboardOferentePage from './pages/oferente/DashboardOferentePage';
 import OferenteBuscarPuestoPage from './pages/oferente/OferenteBuscarPuestoPage';
 import OferenteHabilidadesPage from './pages/oferente/OferenteHabilidadesPage';
 import OferenteCVPage from './pages/oferente/OferenteCVPage';
-import { obtenerSesionGuardada, limpiarSesion, obtenerToken, BASE_API } from './services/api';
-import { MensajeGlobal, Sesion } from './types';
-
-// Obtiene la ruta actual usando el pathname (sin #)
-function obtenerRuta(): string {
-  return window.location.pathname;
+interface MensajeGlobal {
+  tipo: 'success' | 'error' | 'info' | 'warning' | 'danger';
+  texto: string;
 }
 
-// Representa una ruta ya procesada: base (patrón con :params) y los valores extraídos
-interface RutaParseada {
-  base: string;                         // Patrón base de la ruta (ej: /empresa/puestos/:id/candidatos)
-  params: Record<string, string>;       // Diccionario con los valores de los parámetros extraídos
+function AppContent() {
+    const location = useLocation();
+    const navigate = useNavigate();
+    const raw = localStorage.getItem('bolsa.session');
+    const sesion: { id: number; correo: string; rol: string; referenciaId: number; token: string } | null = raw ? JSON.parse(raw) : null;
+    const [mensaje, setMensaje] = useState<MensajeGlobal | null>(null);
+
+    return (
+        <div className="app-shell bg-body-tertiary min-vh-100 d-flex flex-column">
+            <Header sesion={sesion} />
+            <GlobalBanner ruta={location.pathname} onNavegar={navigate} />
+            <AlertaMensaje mensaje={mensaje} onCerrar={() => setMensaje(null)} />
+
+            <main className="flex-grow-1">
+                <Routes>
+                    <Route path="/login" element={<LoginPage onMensaje={setMensaje} />} />
+                    <Route path="/registro/empresa" element={<RegistroEmpresaPage onMensaje={setMensaje} />} />
+                    <Route path="/registro/oferente" element={<RegistroOferentePage onMensaje={setMensaje} />} />
+                    <Route path="/puestos/buscar" element={<BuscarPuestoPublicoPage onMensaje={setMensaje} />} />
+                    <Route path="/" element={<HomePage onMensaje={setMensaje} />} />
+
+                    <Route path="/empresa/dashboard" element={
+                        <ProtectedRoute sesion={sesion}><AccesoRestringido sesion={sesion} rol="EMPRESA"><DashboardEmpresaPage /></AccesoRestringido></ProtectedRoute>
+                    } />
+                    <Route path="/empresa/puestos" element={
+                        <ProtectedRoute sesion={sesion}><AccesoRestringido sesion={sesion} rol="EMPRESA"><EmpresaPuestosPage onMensaje={setMensaje} /></AccesoRestringido></ProtectedRoute>
+                    } />
+                    <Route path="/empresa/publicar" element={
+                        <ProtectedRoute sesion={sesion}><AccesoRestringido sesion={sesion} rol="EMPRESA"><EmpresaPublicarPage onMensaje={setMensaje} /></AccesoRestringido></ProtectedRoute>
+                    } />
+                    <Route path="/empresa/puestos/:puestoId/candidatos" element={
+                        <ProtectedRoute sesion={sesion}><AccesoRestringido sesion={sesion} rol="EMPRESA"><EmpresaCandidatosPage onMensaje={setMensaje} /></AccesoRestringido></ProtectedRoute>
+                    } />
+                    <Route path="/empresa/candidatos/:id/puesto/:puestoId" element={
+                        <ProtectedRoute sesion={sesion}><AccesoRestringido sesion={sesion} rol="EMPRESA"><EmpresaDetalleCandidatoPage onMensaje={setMensaje} /></AccesoRestringido></ProtectedRoute>
+                    } />
+
+                    <Route path="/oferente/dashboard" element={
+                        <ProtectedRoute sesion={sesion}><AccesoRestringido sesion={sesion} rol="OFERENTE"><DashboardOferentePage /></AccesoRestringido></ProtectedRoute>
+                    } />
+                    <Route path="/oferente/habilidades" element={
+                        <ProtectedRoute sesion={sesion}><AccesoRestringido sesion={sesion} rol="OFERENTE"><OferenteHabilidadesPage onMensaje={setMensaje} /></AccesoRestringido></ProtectedRoute>
+                    } />
+                    <Route path="/oferente/cv" element={
+                        <ProtectedRoute sesion={sesion}><AccesoRestringido sesion={sesion} rol="OFERENTE"><OferenteCVPage onMensaje={setMensaje} /></AccesoRestringido></ProtectedRoute>
+                    } />
+                    <Route path="/oferente/buscar" element={
+                        <ProtectedRoute sesion={sesion}><AccesoRestringido sesion={sesion} rol="OFERENTE"><OferenteBuscarPuestoPage onMensaje={setMensaje} /></AccesoRestringido></ProtectedRoute>
+                    } />
+
+                    <Route path="/admin/dashboard" element={
+                        <ProtectedRoute sesion={sesion}><AccesoRestringido sesion={sesion} rol="ADMIN"><DashboardAdminPage /></AccesoRestringido></ProtectedRoute>
+                    } />
+                    <Route path="/admin/pendientes" element={
+                        <ProtectedRoute sesion={sesion}><AccesoRestringido sesion={sesion} rol="ADMIN"><AdminPendientesPage onMensaje={setMensaje} /></AccesoRestringido></ProtectedRoute>
+                    } />
+                    <Route path="/admin/oferentes-pendientes" element={
+                        <ProtectedRoute sesion={sesion}><AccesoRestringido sesion={sesion} rol="ADMIN"><AdminOferentesPendientesPage onMensaje={setMensaje} /></AccesoRestringido></ProtectedRoute>
+                    } />
+                    <Route path="/admin/caracteristicas" element={
+                        <ProtectedRoute sesion={sesion}><AccesoRestringido sesion={sesion} rol="ADMIN"><AdminCaracteristicasPage onMensaje={setMensaje} /></AccesoRestringido></ProtectedRoute>
+                    } />
+                    <Route path="/admin/reportes" element={
+                        <ProtectedRoute sesion={sesion}><AccesoRestringido sesion={sesion} rol="ADMIN"><AdminReportesPage onMensaje={setMensaje} /></AccesoRestringido></ProtectedRoute>
+                    } />
+                </Routes>
+            </main>
+
+            <Footer />
+        </div>
+    );
 }
 
-// Analiza la ruta actual y extrae el patrón base junto con los parámetros dinámicos (ej: ids)
-function parsearRuta(ruta: string): RutaParseada {
-  const candidatosMatch = ruta.match(/^\/empresa\/puestos\/(\d+)\/candidatos$/);
-  if (candidatosMatch) return { base: '/empresa/puestos/:id/candidatos', params: { puestoId: candidatosMatch[1] } };
-
-  const detalleCandidatoMatch = ruta.match(/^\/empresa\/candidatos\/(\d+)\/puesto\/(\d+)/);
-  if (detalleCandidatoMatch) {
-    return { base: '/empresa/candidatos/:id/puesto/:puestoId', params: { id: detalleCandidatoMatch[1], puestoId: detalleCandidatoMatch[2] } };
-  }
-
-  return { base: ruta, params: {} };
-}
-
-// Rutas públicas que muestran el banner global en la parte superior de la página
-const RUTAS_CON_BANNER = ['/', '/puestos/buscar', '/login', '/registro/empresa', '/registro/oferente'];
-
-// Componente principal de la aplicación. Maneja la navegación con History API,
-// el estado global de sesión y los mensajes emergentes, y renderiza la página correspondiente.
 function App() {
-  const [ruta, setRuta] = useState<string>(obtenerRuta);           // Ruta actual (pathname)
-  const [sesion, setSesion] = useState<Sesion | null>(obtenerSesionGuardada);  // Sesión del usuario (null si no ha iniciado)
-  const [mensaje, setMensaje] = useState<MensajeGlobal | null>(null);          // Mensaje global (alerta/info/error)
-
-  // Escucha el evento popstate (navegación con History API)
-  useEffect(() => {
-    const handler = () => setRuta(obtenerRuta());
-    window.addEventListener('popstate', handler);
-    return () => window.removeEventListener('popstate', handler);
-  }, []);
-
-  // Función memoizada para navegar usando History API (pushState + popstate)
-  const navegar = useCallback((destino: string) => {
-    window.history.pushState(null, '', destino);
-    window.dispatchEvent(new PopStateEvent('popstate'));
-  }, []);
-
-  // Limpia la sesión del storage, resetea el estado y redirige al inicio
-  function cerrarSesion() {
-    if (obtenerToken()) {
-      fetch(`${BASE_API}/auth/logout`, { method: 'POST', headers: { 'Authorization': `Bearer ${obtenerToken()}` } }).catch(() => {});
-    }
-    limpiarSesion();
-    setSesion(null);
-    setMensaje({ tipo: 'success', texto: 'Sesión cerrada correctamente.' });
-    navegar('/');
-  }
-
-  // Memoriza el resultado del parseo de la ruta para no recalcularlo en cada render
-  const { base, params } = useMemo(() => parsearRuta(ruta), [ruta]);
-
-  // Memoriza el componente de página a renderizar según la ruta base y los parámetros
-  const pagina = useMemo(() => {
-    switch (base) {
-      case '/login':
-        return <LoginPage onSesion={setSesion} onNavegar={navegar} onMensaje={setMensaje} />;
-      case '/registro/empresa':
-        return <RegistroEmpresaPage onNavegar={navegar} onMensaje={setMensaje} />;
-      case '/registro/oferente':
-        return <RegistroOferentePage onNavegar={navegar} onMensaje={setMensaje} />;
-      case '/puestos/buscar':
-        return <BuscarPuestoPublicoPage onMensaje={setMensaje} />;
-      case '/empresa/dashboard':
-        return <DashboardEmpresaPage sesion={sesion} onNavegar={navegar} />;
-      case '/empresa/puestos':
-        return <EmpresaPuestosPage sesion={sesion} onNavegar={navegar} onMensaje={setMensaje} />;
-      case '/empresa/publicar':
-        return <EmpresaPublicarPage sesion={sesion} onNavegar={navegar} onMensaje={setMensaje} />;
-      case '/empresa/puestos/:id/candidatos':
-        return <EmpresaCandidatosPage sesion={sesion} onNavegar={navegar} onMensaje={setMensaje} puestoId={Number(params.puestoId)} />;
-      case '/empresa/candidatos/:id/puesto/:puestoId':
-        return <EmpresaDetalleCandidatoPage sesion={sesion} onNavegar={navegar} onMensaje={setMensaje} id={Number(params.id)} puestoId={Number(params.puestoId)} />;
-      case '/oferente/dashboard':
-        return <DashboardOferentePage sesion={sesion} onNavegar={navegar} />;
-      case '/oferente/habilidades':
-        return <OferenteHabilidadesPage sesion={sesion} onNavegar={navegar} onMensaje={setMensaje} />;
-      case '/oferente/cv':
-        return <OferenteCVPage sesion={sesion} onNavegar={navegar} onMensaje={setMensaje} />;
-      case '/oferente/buscar':
-        return <OferenteBuscarPuestoPage sesion={sesion} onNavegar={navegar} onMensaje={setMensaje} />;
-      case '/admin/dashboard':
-        return <DashboardAdminPage sesion={sesion} onNavegar={navegar} />;
-      case '/admin/pendientes':
-        return <AdminPendientesPage sesion={sesion} onNavegar={navegar} onMensaje={setMensaje} />;
-      case '/admin/oferentes-pendientes':
-        return <AdminOferentesPendientesPage sesion={sesion} onNavegar={navegar} onMensaje={setMensaje} />;
-      case '/admin/caracteristicas':
-        return <AdminCaracteristicasPage sesion={sesion} onNavegar={navegar} onMensaje={setMensaje} />;
-      case '/admin/reportes':
-        return <AdminReportesPage sesion={sesion} onNavegar={navegar} />;
-      default:
-        return <HomePage sesion={sesion} onNavegar={navegar} onMensaje={setMensaje} />;
-    }
-  }, [base, params, sesion, navegar]);
-
-  // Determina si la ruta actual está entre las que deben mostrar el banner global
-  const mostrarBanner = RUTAS_CON_BANNER.includes(ruta);
-
-  // Renderiza el layout principal: header, banner opcional, alertas, contenido dinámico y footer
-  return (
-    <div className="app-shell bg-body-tertiary min-vh-100 d-flex flex-column">
-      <Header sesion={sesion} ruta={ruta} onNavegar={navegar} onLogout={cerrarSesion} />
-      {mostrarBanner && <GlobalBanner ruta={ruta} onNavegar={navegar} />}
-
-      <AlertaMensaje mensaje={mensaje} onCerrar={() => setMensaje(null)} />
-
-      <main className="flex-grow-1">
-        {pagina}
-      </main>
-
-      <Footer />
-    </div>
-  );
+    return (
+        <BrowserRouter>
+            <AppContent />
+        </BrowserRouter>
+    );
 }
 
 export default App;

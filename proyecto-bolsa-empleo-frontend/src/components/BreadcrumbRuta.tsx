@@ -2,7 +2,12 @@
 // en el árbol de características. Permite navegar hacia arriba en el árbol
 // y muestra la característica actual seleccionada.
 
-import { Caracteristica } from '../types';
+interface Caracteristica {
+  id: number;
+  nombre: string;
+  padreId: number | null;
+  hijos: Caracteristica[];
+}
 
 interface Props {
   // Array de características que forman el camino desde la raíz hasta el padre

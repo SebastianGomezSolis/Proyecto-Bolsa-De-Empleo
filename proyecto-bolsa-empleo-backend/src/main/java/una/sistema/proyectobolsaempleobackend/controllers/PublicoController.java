@@ -1,8 +1,9 @@
 package una.sistema.proyectobolsaempleobackend.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import una.sistema.proyectobolsaempleobackend.dto.*;
 import una.sistema.proyectobolsaempleobackend.logic.ModeloDatos;
 import una.sistema.proyectobolsaempleobackend.logic.model.Puesto;
@@ -55,26 +56,26 @@ public class PublicoController {
     }
 
     @GetMapping("/puestos/{id}")
-    public ResponseEntity<?> detallePuesto(@PathVariable Integer id) {
+    public DetallePuestoResponse detallePuesto(@PathVariable Integer id) {
         Puesto puesto = modeloDatos.getPuestoService().findById(id);
         if (puesto == null || !puesto.getActivo() || !"publico".equals(puesto.getTipoPublicacion()))
-            return ResponseEntity.notFound().build();
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Puesto no encontrado");
 
         puesto.setCaracteristicas(modeloDatos.getPuestoCaracteristicaService().findByPuesto(id));
-        return ResponseEntity.ok(new DetallePuestoResponse(puesto, obtenerTipoCambio()));
+        return new DetallePuestoResponse(puesto, obtenerTipoCambio());
     }
 
     @GetMapping("/nacionalidades")
-    public ResponseEntity<?> nacionalidades() {
-        return ResponseEntity.ok(modeloDatos.getNacionalidadService().findAll());
+    public List nacionalidades() {
+        return modeloDatos.getNacionalidadService().findAll();
     }
 
     @GetMapping("/caracteristicas")
-    public ResponseEntity<?> caracteristicas(@RequestParam(required = false) Integer padreId) {
+    public List caracteristicas(@RequestParam(required = false) Integer padreId) {
         if (padreId == null) {
-            return ResponseEntity.ok(modeloDatos.getCaracteristicaService().findRaices());
+            return modeloDatos.getCaracteristicaService().findRaices();
         }
-        return ResponseEntity.ok(modeloDatos.getCaracteristicaService().findHijos(padreId));
+        return modeloDatos.getCaracteristicaService().findHijos(padreId);
     }
 
     private List<Puesto> enriquecerPuestos(List<Puesto> puestos) {

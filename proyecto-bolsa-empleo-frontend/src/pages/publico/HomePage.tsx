@@ -1,32 +1,43 @@
-// Página de inicio pública del sistema. Muestra los últimos puestos publicados.
-
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import SectionTitle from '../../components/SectionTitle';
 import LoadingBlock from '../../components/LoadingBlock';
-import { BASE_API, getAuthHeaders } from '../../services/api';
-import { Sesion, MensajeGlobal, Puesto, PuestosResponse } from '../../types';
-import { formatSalario, formatFecha } from '../../utils/formatters';
+import { formatSalario } from '../../utils/formatters';
+
+interface MensajeGlobal {
+  tipo: 'success' | 'error' | 'info' | 'warning' | 'danger';
+  texto: string;
+}
+
+interface Puesto {
+  id: number;
+  descripcion: string;
+  salario: number;
+  tipoPublicacion: string;
+  empresa: { id: number; nombre: string; usuarioCorreo: string };
+  activo: boolean;
+  fechaRegistro: string;
+  caracteristicas: { id: number; nombre: string; nivelRequerido: number }[];
+  tipoCambio?: { compra: number; venta: number; fecha: string };
+}
+
+interface PuestosResponse {
+  puestos: Puesto[];
+  tipoCambio?: { compra: number; venta: number; fecha: string };
+}
 
 interface Props {
-  // Sesión actual del usuario (null si no está autenticado)
-  sesion: Sesion | null;
-  // Función de navegación para redirigir al usuario a otras páginas
-  onNavegar: (ruta: string) => void;
-  // Función de callback para mostrar mensajes globales (éxito/error)
   onMensaje: (m: MensajeGlobal) => void;
 }
 
-function HomePage({ sesion, onNavegar, onMensaje }: Props) {
-  // Estado para almacenar los últimos puestos publicados
+function HomePage({ onMensaje }: Props) {
+  const navigate = useNavigate();
   const [puestos, setPuestos] = useState<Puesto[]>([]);
-  // Estado para indicar si se están cargando los datos desde el backend
   const [cargando, setCargando] = useState(true);
-  // Indica si el usuario tiene una sesión activa
-  const logueado = Boolean(sesion);
 
   // Effect que carga los últimos puestos públicos al montar el componente
   useEffect(() => {
-    fetch(`${BASE_API}/publico/puestos/ultimos`, { headers: getAuthHeaders() })
+    fetch("http://localhost:8080/api/publico/puestos/ultimos", { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) })
       .then(async (res) => { if (res.ok) return res.json(); throw new Error(await res.text()); })
       .then((res: PuestosResponse) => {
         setPuestos((res.puestos ?? []).map((p: Puesto) => ({ ...p, tipoCambio: res.tipoCambio })));

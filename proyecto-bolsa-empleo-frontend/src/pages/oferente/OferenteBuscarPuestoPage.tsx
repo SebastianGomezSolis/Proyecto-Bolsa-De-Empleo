@@ -1,22 +1,43 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import SectionTitle from '../../components/SectionTitle';
 import LoadingBlock from '../../components/LoadingBlock';
 import SelectorCaracteristicas from '../../components/SelectorCaracteristicas';
 import ResultadosPuesto from '../../components/ResultadosPuesto';
-import { BASE_API, getAuthHeaders } from '../../services/api';
-import { Sesion, MensajeGlobal, Caracteristica, Puesto } from '../../types';
+
+
+interface MensajeGlobal {
+  tipo: 'success' | 'error' | 'info' | 'warning' | 'danger';
+  texto: string;
+}
+
+interface Caracteristica {
+  id: number;
+  nombre: string;
+  padreId: number | null;
+  hijos: Caracteristica[];
+}
+
+interface Puesto {
+  id: number;
+  descripcion: string;
+  salario: number;
+  tipoPublicacion: string;
+  empresa: { id: number; nombre: string; usuarioCorreo: string };
+  activo: boolean;
+  fechaRegistro: string;
+  caracteristicas: { id: number; nombre: string; nivelRequerido: number }[];
+  tipoCambio?: { compra: number; venta: number; fecha: string };
+}
 
 interface Props {
-  // Sesión actual del usuario (se usa para verificar rol de oferente)
-  sesion: Sesion | null;
-  // Función de navegación para redirigir al usuario a otras páginas
-  onNavegar: (ruta: string) => void;
   // Función de callback para mostrar mensajes globales (éxito/error)
   onMensaje: (m: MensajeGlobal) => void;
 }
 
 // Componente principal para buscar puestos por características
-function OferenteBuscarPuestoPage({ sesion, onNavegar, onMensaje }: Props) {
+function OferenteBuscarPuestoPage({ onMensaje }: Props) {
+  const navigate = useNavigate();
   // Estado con el árbol de características (raíces con hijos y nietos)
   const [raices, setRaices] = useState<Caracteristica[]>([]);
   // IDs de las características seleccionadas para filtrar
@@ -30,21 +51,20 @@ function OferenteBuscarPuestoPage({ sesion, onNavegar, onMensaje }: Props) {
 
   // Effect para cargar el árbol completo de características al montar el componente
   useEffect(() => {
-    if (!sesion || sesion.rol !== 'OFERENTE') return;
     const cargar = async () => {
       try {
         // Obtener raíces y sus hijos y nietos para construir el árbol
-        const raizRes = await fetch(`${BASE_API}/publico/caracteristicas`, { headers: getAuthHeaders() });
+        const raizRes = await fetch("http://localhost:8080/api/publico/caracteristicas", { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
         if (!raizRes.ok) throw new Error(await raizRes.text());
         const raiz: Caracteristica[] = await raizRes.json();
         const conHijos = await Promise.all(
           raiz.map(async (r) => {
-            const hijosRes = await fetch(`${BASE_API}/publico/caracteristicas?padreId=${r.id}`, { headers: getAuthHeaders() });
+            const hijosRes = await fetch(`http://localhost:8080/api/publico/caracteristicas?padreId=${r.id}`, { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
             if (!hijosRes.ok) throw new Error(await hijosRes.text());
             const hijos: Caracteristica[] = await hijosRes.json();
             const hijosConNietos = await Promise.all(
               hijos.map(async (h) => {
-                const nietosRes = await fetch(`${BASE_API}/publico/caracteristicas?padreId=${h.id}`, { headers: getAuthHeaders() });
+                const nietosRes = await fetch(`http://localhost:8080/api/publico/caracteristicas?padreId=${h.id}`, { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
                 if (!nietosRes.ok) throw new Error(await nietosRes.text());
                 const nietos = await nietosRes.json();
                 return { ...h, hijos: nietos };
@@ -61,17 +81,7 @@ function OferenteBuscarPuestoPage({ sesion, onNavegar, onMensaje }: Props) {
       }
     };
     cargar();
-  }, [sesion, onMensaje]);
-
-  // Verificar que el usuario esté autenticado y tenga rol de oferente
-  if (!sesion || sesion.rol !== 'OFERENTE') {
-    return (
-      <section className="container py-5">
-        <div className="alert alert-warning">Acceso restringido a oferentes autorizados.</div>
-        <button className="btn btn-outline-secondary" onClick={() => onNavegar('/')}>Volver</button>
-      </section>
-    );
-  }
+  }, [onMensaje]);
 
   // Alternar selección de una característica (agregar o quitar)
   const toggleSeleccion = (id: number) =>
@@ -83,7 +93,7 @@ function OferenteBuscarPuestoPage({ sesion, onNavegar, onMensaje }: Props) {
     setBuscando(true);
     try {
       const params = seleccionados.length > 0 ? `?caracteristicaIds=${seleccionados.join(',')}` : '';
-      const buscarRes = await fetch(`${BASE_API}/oferente/puestos/buscar${params}`, { headers: getAuthHeaders() });
+      const buscarRes = await fetch(`http://localhost:8080/api/oferente/puestos/buscar${params}`, { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
       if (!buscarRes.ok) throw new Error(await buscarRes.text());
       const res = await buscarRes.json();
       setPuestos((res.puestos ?? []).map((p: Puesto) => ({ ...p, tipoCambio: res.tipoCambio })));

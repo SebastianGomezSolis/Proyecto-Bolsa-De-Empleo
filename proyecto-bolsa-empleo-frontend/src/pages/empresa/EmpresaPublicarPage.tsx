@@ -1,21 +1,29 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import SectionTitle from '../../components/SectionTitle';
 import LoadingBlock from '../../components/LoadingBlock';
-import { BASE_API, getAuthHeaders } from '../../services/api';
-import { Sesion, MensajeGlobal, Caracteristica } from '../../types';
+
+interface MensajeGlobal {
+  tipo: 'success' | 'error' | 'info' | 'warning' | 'danger';
+  texto: string;
+}
+
+interface Caracteristica {
+  id: number;
+  nombre: string;
+  padreId: number | null;
+  hijos: Caracteristica[];
+}
 
 interface Props {
-  // Sesión actual del usuario (se usa para verificar rol de empresa)
-  sesion: Sesion | null;
-  // Función de navegación para redirigir al usuario a otras páginas
-  onNavegar: (ruta: string) => void;
   // Función de callback para mostrar mensajes globales (éxito/error)
   onMensaje: (m: MensajeGlobal) => void;
 }
 
 // Componente principal para publicar un nuevo puesto de trabajo
 // Incluye formulario con descripción, salario, tipo de publicación y características requeridas
-function EmpresaPublicarPage({ sesion, onNavegar, onMensaje }: Props) {
+function EmpresaPublicarPage({ onMensaje }: Props) {
+  const navigate = useNavigate();
   // Estado del formulario: descripción, salario y tipo de publicación
   const [form, setForm] = useState({ descripcion: '', salario: '', tipoPublicacion: 'publico' });
   // Estado para almacenar la jerarquía de características disponibles
@@ -29,22 +37,20 @@ function EmpresaPublicarPage({ sesion, onNavegar, onMensaje }: Props) {
 
   // Effect para cargar la jerarquía completa de características al montar el componente
   useEffect(() => {
-    // Solo proceder si el usuario es una empresa
-    if (!sesion || sesion.rol !== 'EMPRESA') return;
     const cargar = async () => {
       try {
         // Obtener las características raíz y construir el árbol completo
-        const raizResp = await fetch(`${BASE_API}/publico/caracteristicas`, { headers: getAuthHeaders() });
+        const raizResp = await fetch("http://localhost:8080/api/publico/caracteristicas", { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
         if (!raizResp.ok) throw new Error(await raizResp.text());
         const raiz: Caracteristica[] = await raizResp.json();
         const conHijos = await Promise.all(
           raiz.map(async (r) => {
-            const hijosResp = await fetch(`${BASE_API}/publico/caracteristicas?padreId=${r.id}`, { headers: getAuthHeaders() });
+            const hijosResp = await fetch(`http://localhost:8080/api/publico/caracteristicas?padreId=${r.id}`, { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
             if (!hijosResp.ok) throw new Error(await hijosResp.text());
             const hijos: Caracteristica[] = await hijosResp.json();
             const hijosConNietos = await Promise.all(
               hijos.map(async (h) => {
-                const nietosResp = await fetch(`${BASE_API}/publico/caracteristicas?padreId=${h.id}`, { headers: getAuthHeaders() });
+                const nietosResp = await fetch(`http://localhost:8080/api/publico/caracteristicas?padreId=${h.id}`, { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
                 if (!nietosResp.ok) throw new Error(await nietosResp.text());
                 const nietos = await nietosResp.json();
                 return { ...h, hijos: nietos };
@@ -61,18 +67,7 @@ function EmpresaPublicarPage({ sesion, onNavegar, onMensaje }: Props) {
       }
     };
     cargar();
-  }, [sesion, onMensaje]);
-
-  // Verificar si el usuario tiene sesión activa y rol de empresa
-  // Si no cumple, mostrar mensaje de acceso restringido con botón para volver
-  if (!sesion || sesion.rol !== 'EMPRESA') {
-    return (
-      <section className="container py-5">
-        <div className="alert alert-warning">Acceso restringido a empresas autorizadas.</div>
-        <button className="btn btn-outline-secondary" onClick={() => onNavegar('/')}>Volver</button>
-      </section>
-    );
-  }
+  }, [onMensaje]);
 
   // Función auxiliar para actualizar un campo del formulario
   const set = (campo: string, valor: string) => setForm((prev) => ({ ...prev, [campo]: valor }));
@@ -103,7 +98,7 @@ function EmpresaPublicarPage({ sesion, onNavegar, onMensaje }: Props) {
       });
 
       // Llamar al API para crear el puesto con todos los datos del formulario
-      const res = await fetch(`${BASE_API}/empresa/puestos`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }, body: JSON.stringify({
+      const res = await fetch("http://localhost:8080/api/empresa/puestos", { method: 'POST', headers: new Headers({ "Content-Type": "application/json", "Authorization": "Bearer " + localStorage.getItem("token") }), body: JSON.stringify({
         ...form,
         salario: Number(form.salario),
         caracteristicaIds,
@@ -111,7 +106,7 @@ function EmpresaPublicarPage({ sesion, onNavegar, onMensaje }: Props) {
       }) });
       if (!res.ok) throw new Error(await res.text());
       onMensaje({ tipo: 'success', texto: 'Puesto publicado correctamente.' });
-      onNavegar('/empresa/puestos'); // Redirigir a la lista de puestos
+      navigate('/empresa/puestos');
     } catch (error) {
       onMensaje({ tipo: 'danger', texto: (error as Error).message });
     } finally {
@@ -221,7 +216,7 @@ function EmpresaPublicarPage({ sesion, onNavegar, onMensaje }: Props) {
             <button type="submit" className="btn btn-dark" disabled={enviando}>
               {enviando ? 'Publicando...' : 'Publicar puesto'}
             </button>
-            <button type="button" className="btn btn-outline-dark" onClick={() => onNavegar('/empresa/puestos')}>
+            <button type="button" className="btn btn-outline-dark" onClick={() => navigate('/empresa/puestos')}>
               Cancelar
             </button>
           </div>

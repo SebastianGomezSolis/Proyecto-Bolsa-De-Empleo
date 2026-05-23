@@ -8,6 +8,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -33,52 +34,51 @@ public class OferenteController {
     private Path cvBaseDir;
 
     @GetMapping("/perfil")
-    public ResponseEntity<?> perfil() {
+    public Oferente perfil() {
         Claims claims = getClaims();
-        if (claims == null || !Rol.OFERENTE.name().equals(claims.get("rol", String.class))) return forbidden();
+        if (!Rol.OFERENTE.name().equals(claims.get("rol", String.class))) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acceso denegado");
         Oferente oferente = modeloDatos.getOferenteService().findById(claims.get("referenciaId", Integer.class));
-        if (oferente == null) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(oferente);
+        if (oferente == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Oferente no encontrado");
+        return oferente;
     }
 
     @GetMapping("/habilidades")
-    public ResponseEntity<?> habilidades() {
+    public List habilidades() {
         Claims claims = getClaims();
-        if (claims == null || !Rol.OFERENTE.name().equals(claims.get("rol", String.class))) return forbidden();
-        return ResponseEntity.ok(
-                modeloDatos.getHabilidadService().findByOferente(claims.get("referenciaId", Integer.class)));
+        if (!Rol.OFERENTE.name().equals(claims.get("rol", String.class))) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acceso denegado");
+        return modeloDatos.getHabilidadService().findByOferente(claims.get("referenciaId", Integer.class));
     }
 
     @PostMapping("/habilidades")
-    public ResponseEntity<?> agregarHabilidad(@RequestBody AgregarHabilidadRequest req) {
+    public String agregarHabilidad(@RequestBody AgregarHabilidadRequest req) {
         Claims claims = getClaims();
-        if (claims == null || !Rol.OFERENTE.name().equals(claims.get("rol", String.class))) return forbidden();
+        if (!Rol.OFERENTE.name().equals(claims.get("rol", String.class))) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acceso denegado");
 
         Integer caracteristicaId = req.getCaracteristicaId();
         Integer nivel = req.getNivel();
 
         if (caracteristicaId == null || nivel == null)
-            return ResponseEntity.badRequest().body("Datos incompletos");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Datos incompletos");
         if (nivel < 1 || nivel > 5)
-            return ResponseEntity.badRequest().body("El nivel debe ser entre 1 y 5");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El nivel debe ser entre 1 y 5");
 
         Caracteristica caracteristica = modeloDatos.getCaracteristicaService().findById(caracteristicaId);
         if (caracteristica == null)
-            return ResponseEntity.badRequest().body("Característica no encontrada");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Característica no encontrada");
 
         if (!modeloDatos.getCaracteristicaService().isHoja(caracteristicaId))
-            return ResponseEntity.badRequest().body("Solo se pueden registrar habilidades de nivel hoja");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Solo se pueden registrar habilidades de nivel hoja");
 
         Integer refId = claims.get("referenciaId", Integer.class);
         Oferente oferente = modeloDatos.getOferenteService().findById(refId);
         if (oferente == null)
-            return ResponseEntity.badRequest().body("Oferente no encontrado");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Oferente no encontrado");
 
         List<Habilidad> existentes = modeloDatos.getHabilidadService().findByOferente(refId);
         for (Habilidad h : existentes) {
             if (h.getCaracteristica() != null && h.getCaracteristica().getId().equals(caracteristicaId)) {
-                return ResponseEntity.badRequest()
-                        .body("La habilidad \"" + caracteristica.getNombre() + "\" ya está registrada");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "La habilidad \"" + caracteristica.getNombre() + "\" ya está registrada");
             }
         }
 
@@ -87,28 +87,28 @@ public class OferenteController {
         habilidad.setCaracteristica(caracteristica);
         habilidad.setNivel(nivel);
         modeloDatos.getHabilidadService().save(habilidad);
-        return ResponseEntity.ok("Habilidad agregada");
+        return "Habilidad agregada";
     }
 
     @DeleteMapping("/habilidades/{id}")
-    public ResponseEntity<?> eliminarHabilidad(@PathVariable Integer id) {
+    public String eliminarHabilidad(@PathVariable Integer id) {
         Claims claims = getClaims();
-        if (claims == null || !Rol.OFERENTE.name().equals(claims.get("rol", String.class))) return forbidden();
+        if (!Rol.OFERENTE.name().equals(claims.get("rol", String.class))) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acceso denegado");
 
         Habilidad habilidad = modeloDatos.getHabilidadService().findById(id);
-        if (habilidad == null) return ResponseEntity.notFound().build();
+        if (habilidad == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Habilidad no encontrada");
 
         if (!habilidad.getOferente().getId().equals(claims.get("referenciaId", Integer.class)))
-            return forbidden();
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acceso denegado");
 
         modeloDatos.getHabilidadService().deleteById(id);
-        return ResponseEntity.ok("Habilidad eliminada");
+        return "Habilidad eliminada";
     }
 
     @GetMapping("/caracteristicas")
-    public ResponseEntity<?> caracteristicas(@RequestParam(required = false) Integer actualId) {
+    public CaracteristicasOferenteResponse caracteristicas(@RequestParam(required = false) Integer actualId) {
         Claims claims = getClaims();
-        if (claims == null || !Rol.OFERENTE.name().equals(claims.get("rol", String.class))) return forbidden();
+        if (!Rol.OFERENTE.name().equals(claims.get("rol", String.class))) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acceso denegado");
 
         CaracteristicasOferenteResponse resp = new CaracteristicasOferenteResponse();
         if (actualId == null) {
@@ -116,19 +116,19 @@ public class OferenteController {
             resp.setActual(null);
         } else {
             Caracteristica actual = modeloDatos.getCaracteristicaService().findById(actualId);
-            if (actual == null) return ResponseEntity.notFound().build();
+            if (actual == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Característica no encontrada");
             resp.setSubcategorias(modeloDatos.getCaracteristicaService().findHijos(actualId));
             resp.setActual(actual);
         }
-        return ResponseEntity.ok(resp);
+        return resp;
     }
 
     @SuppressWarnings("unchecked")
     @GetMapping("/puestos/buscar")
-    public ResponseEntity<?> buscarPorCaracteristicas(
+    public BuscarPuestosResponse buscarPorCaracteristicas(
             @RequestParam(required = false) List<Integer> caracteristicaIds) {
         Claims claims = getClaims();
-        if (claims == null || !Rol.OFERENTE.name().equals(claims.get("rol", String.class))) return forbidden();
+        if (!Rol.OFERENTE.name().equals(claims.get("rol", String.class))) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acceso denegado");
 
         List<Puesto> puestos;
         if (caracteristicaIds == null || caracteristicaIds.isEmpty()) {
@@ -137,48 +137,48 @@ public class OferenteController {
             puestos = (List<Puesto>) modeloDatos.getPuestoService().findActivosAmbostiposPorCaracteristicas(caracteristicaIds);
         }
 
-        return ResponseEntity.ok(new BuscarPuestosResponse(
+        return new BuscarPuestosResponse(
                 enriquecerPuestos(puestos),
                 modeloDatos.getCaracteristicaService().findRaices(),
                 obtenerTipoCambio(),
                 caracteristicaIds
-        ));
+        );
     }
 
     @GetMapping("/puestos/{id}")
-    public ResponseEntity<?> detallePuesto(@PathVariable Integer id) {
+    public DetallePuestoResponse detallePuesto(@PathVariable Integer id) {
         Claims claims = getClaims();
-        if (claims == null || !Rol.OFERENTE.name().equals(claims.get("rol", String.class))) return forbidden();
+        if (!Rol.OFERENTE.name().equals(claims.get("rol", String.class))) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acceso denegado");
 
         Puesto puesto = modeloDatos.getPuestoService().findById(id);
         if (puesto == null || !puesto.getActivo())
-            return ResponseEntity.notFound().build();
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Puesto no encontrado");
 
         puesto.setCaracteristicas(modeloDatos.getPuestoCaracteristicaService().findByPuesto(id));
 
-        return ResponseEntity.ok(new DetallePuestoResponse(puesto, obtenerTipoCambio()));
+        return new DetallePuestoResponse(puesto, obtenerTipoCambio());
     }
 
     @GetMapping("/cv")
     public ResponseEntity<?> verCv() throws Exception {
         Claims claims = getClaims();
-        if (claims == null || !Rol.OFERENTE.name().equals(claims.get("rol", String.class))) return forbidden();
+        if (!Rol.OFERENTE.name().equals(claims.get("rol", String.class))) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acceso denegado");
 
         Oferente oferente = modeloDatos.getOferenteService().findById(claims.get("referenciaId", Integer.class));
-        if (oferente == null) return ResponseEntity.notFound().build();
+        if (oferente == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Oferente no encontrado");
 
         String filename = oferente.getCurriculum();
-        if (filename == null || filename.isBlank()) return ResponseEntity.notFound().build();
+        if (filename == null || filename.isBlank()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "CV no encontrado");
 
         String raw = filename.replace("\\", "/");
         if (raw.contains("/")) raw = raw.substring(raw.lastIndexOf("/") + 1);
 
         Path filePath = cvBaseDir.resolve(raw).normalize();
         if (!filePath.startsWith(cvBaseDir))
-            return ResponseEntity.status(400).body("Ruta inválida");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ruta inválida");
 
         Resource resource = new UrlResource(filePath.toUri());
-        if (!resource.exists()) return ResponseEntity.notFound().build();
+        if (!resource.exists()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "CV no encontrado");
 
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)
@@ -187,20 +187,20 @@ public class OferenteController {
     }
 
     @PostMapping("/cv/subir")
-    public ResponseEntity<?> subirCv(@RequestParam("archivo") MultipartFile archivo) {
+    public CvUploadResponse subirCv(@RequestParam("archivo") MultipartFile archivo) {
         Claims claims = getClaims();
-        if (claims == null || !Rol.OFERENTE.name().equals(claims.get("rol", String.class))) return forbidden();
+        if (!Rol.OFERENTE.name().equals(claims.get("rol", String.class))) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acceso denegado");
 
         if (archivo == null || archivo.isEmpty())
-            return ResponseEntity.badRequest().body("Debe seleccionar un archivo PDF");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Debe seleccionar un archivo PDF");
 
         String nombreArchivo = archivo.getOriginalFilename();
         if (nombreArchivo == null || !nombreArchivo.toLowerCase().endsWith(".pdf"))
-            return ResponseEntity.badRequest().body("Solo se permiten archivos PDF");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Solo se permiten archivos PDF");
 
         Integer refId = claims.get("referenciaId", Integer.class);
         Oferente oferente = modeloDatos.getOferenteService().findById(refId);
-        if (oferente == null) return ResponseEntity.badRequest().body("Oferente no encontrado");
+        if (oferente == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Oferente no encontrado");
 
         try {
             Files.createDirectories(cvBaseDir);
@@ -210,16 +210,16 @@ public class OferenteController {
 
             String canonicalDir = cvBaseDir.toFile().getCanonicalPath() + File.separator;
             if (!destino.getCanonicalPath().startsWith(canonicalDir))
-                return ResponseEntity.badRequest().body("Ruta de archivo no permitida");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ruta de archivo no permitida");
 
             archivo.transferTo(destino);
 
             modeloDatos.getOferenteService().actualizarCurriculum(refId, idSanitizado + ".pdf");
 
-            return ResponseEntity.ok(new CvUploadResponse(idSanitizado + ".pdf"));
+            return new CvUploadResponse(idSanitizado + ".pdf");
 
         } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al subir el archivo");
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al subir el archivo");
         }
     }
 
@@ -239,12 +239,9 @@ public class OferenteController {
 
     private Claims getClaims() {
         var auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !(auth.getPrincipal() instanceof Claims claims)) return null;
+        if (auth == null || !(auth.getPrincipal() instanceof Claims claims))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acceso denegado");
         return claims;
-    }
-
-    private ResponseEntity<?> forbidden() {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acceso denegado");
     }
 
     @PostConstruct

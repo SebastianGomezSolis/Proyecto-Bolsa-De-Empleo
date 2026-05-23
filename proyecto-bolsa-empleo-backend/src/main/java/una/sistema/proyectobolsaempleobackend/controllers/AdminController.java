@@ -6,7 +6,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import una.sistema.proyectobolsaempleobackend.dto.*;
 import una.sistema.proyectobolsaempleobackend.logic.ModeloDatos;
@@ -23,37 +25,38 @@ public class AdminController {
     private ModeloDatos modeloDatos;
 
     @GetMapping("/empresas/pendientes")
-    public ResponseEntity<?> empresasPendientes() {
-        if (!esAdmin()) return forbidden();
-        return ResponseEntity.ok(modeloDatos.getEmpresaService().findPendientes());
+    public List empresasPendientes() {
+        if (!esAdmin()) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acceso denegado");
+        return modeloDatos.getEmpresaService().findPendientes();
     }
 
     @PostMapping("/empresas/{id}/autorizar")
-    public ResponseEntity<?> autorizarEmpresa(@PathVariable Integer id) {
-        if (!esAdmin()) return forbidden();
+    public String autorizarEmpresa(@PathVariable Integer id) {
+        if (!esAdmin()) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acceso denegado");
         String error = modeloDatos.getEmpresaService().autorizar(id);
-        if (error != null) return ResponseEntity.badRequest().body(error);
-        return ResponseEntity.ok("Empresa autorizada");
+        if (error != null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, error);
+        return "Empresa autorizada";
     }
 
     @GetMapping("/oferentes/pendientes")
-    public ResponseEntity<?> oferentesPendientes() {
-        if (!esAdmin()) return forbidden();
-        return ResponseEntity.ok(modeloDatos.getOferenteService().findPendientes());
+    public List oferentesPendientes() {
+        if (!esAdmin()) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acceso denegado");
+        return modeloDatos.getOferenteService().findPendientes();
     }
 
     @PostMapping("/oferentes/{id}/autorizar")
-    public ResponseEntity<?> autorizarOferente(@PathVariable Integer id) {
-        if (!esAdmin()) return forbidden();
+    public String autorizarOferente(@PathVariable Integer id) {
+        if (!esAdmin()) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acceso denegado");
         String error = modeloDatos.getOferenteService().autorizar(id);
-        if (error != null) return ResponseEntity.badRequest().body(error);
-        return ResponseEntity.ok("Oferente autorizado");
+        if (error != null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, error);
+        return "Oferente autorizado";
     }
 
     @GetMapping("/caracteristicas")
-    public ResponseEntity<?> caracteristicas(
+    @Transactional(readOnly = true)
+    public CaracteristicasAdminResponse caracteristicas(
             @RequestParam(required = false) Integer actualId) {
-        if (!esAdmin()) return forbidden();
+        if (!esAdmin()) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acceso denegado");
 
         CaracteristicasAdminResponse resp = new CaracteristicasAdminResponse();
         resp.setTodas(modeloDatos.getCaracteristicaService().findAll());
@@ -75,41 +78,41 @@ public class AdminController {
             }
         }
 
-        return ResponseEntity.ok(resp);
+        return resp;
     }
 
     @PostMapping("/caracteristicas")
-    public ResponseEntity<?> crearCaracteristica(@RequestBody CrearCaracteristicaRequest req) {
-        if (!esAdmin()) return forbidden();
+    public String crearCaracteristica(@RequestBody CrearCaracteristicaRequest req) {
+        if (!esAdmin()) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acceso denegado");
 
         String nombre  = req.getNombre();
         Integer padreId = req.getPadreId();
 
         if (nombre == null || nombre.isBlank())
-            return ResponseEntity.badRequest().body("El nombre de la característica es obligatorio");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El nombre de la característica es obligatorio");
 
         String nombreLimpio = nombre.trim();
 
         if (modeloDatos.getCaracteristicaService().existeEnMismoNivel(nombreLimpio, padreId))
-            return ResponseEntity.badRequest()
-                    .body("Ya existe una característica con ese nombre bajo el mismo padre");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Ya existe una característica con ese nombre bajo el mismo padre");
 
         Caracteristica c = new Caracteristica();
         c.setNombre(nombreLimpio);
 
         if (padreId != null) {
             Caracteristica padre = modeloDatos.getCaracteristicaService().findById(padreId);
-            if (padre == null) return ResponseEntity.badRequest().body("Padre no encontrado");
+            if (padre == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Padre no encontrado");
             c.setPadre(padre);
         }
 
         modeloDatos.getCaracteristicaService().save(c);
-        return ResponseEntity.ok("Característica creada");
+        return "Característica creada";
     }
 
     @GetMapping("/reportes/pdf")
     public ResponseEntity<?> reportePdf(@RequestParam int mes, @RequestParam int anio) {
-        if (!esAdmin()) return forbidden();
+        if (!esAdmin()) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acceso denegado");
 
         try {
             byte[] pdf = modeloDatos.getReporteService().generarPdfPuestosPorMesYAnio(mes, anio);
@@ -140,9 +143,5 @@ public class AdminController {
         var auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !(auth.getPrincipal() instanceof Claims claims)) return false;
         return Rol.ADMIN.name().equals(claims.get("rol", String.class));
-    }
-
-    private ResponseEntity<?> forbidden() {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acceso denegado");
     }
 }

@@ -6,13 +6,35 @@ import SectionTitle from '../../components/SectionTitle';
 import LoadingBlock from '../../components/LoadingBlock';
 import SelectorCaracteristicas from '../../components/SelectorCaracteristicas';
 import ResultadosPuesto from '../../components/ResultadosPuesto';
-import { BASE_API, getAuthHeaders } from '../../services/api';
-import { MensajeGlobal, Caracteristica, Puesto } from '../../types';
+
+interface MensajeGlobal {
+  tipo: 'success' | 'error' | 'info' | 'warning' | 'danger';
+  texto: string;
+}
+
+interface Caracteristica {
+  id: number;
+  nombre: string;
+  padreId: number | null;
+  hijos: Caracteristica[];
+}
+
+interface Puesto {
+  id: number;
+  descripcion: string;
+  salario: number;
+  tipoPublicacion: string;
+  empresa: { id: number; nombre: string; usuarioCorreo: string };
+  activo: boolean;
+  fechaRegistro: string;
+  caracteristicas: { id: number; nombre: string; nivelRequerido: number }[];
+  tipoCambio?: { compra: number; venta: number; fecha: string };
+}
 
 // Función recursiva para cargar el árbol completo de características desde el backend
 async function cargarArbolCompleto(padreId: number | null = null): Promise<Caracteristica[]> {
-  const url = padreId ? `${BASE_API}/publico/caracteristicas?padreId=${padreId}` : `${BASE_API}/publico/caracteristicas`;
-  const response = await fetch(url, { headers: getAuthHeaders() });
+  const url = padreId ? `http://localhost:8080/api/publico/caracteristicas?padreId=${padreId}` : `http://localhost:8080/api/publico/caracteristicas`;
+  const response = await fetch(url, { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
   if (!response.ok) throw new Error(await response.text());
   const nodos: Caracteristica[] = await response.json();
   return Promise.all(
@@ -58,7 +80,7 @@ function BuscarPuestoPublicoPage({ onMensaje }: Props) {
     setBuscando(true);
     try {
       const params = seleccionados.length ? `?caracteristicaIds=${seleccionados.join(',')}` : '';
-      const response = await fetch(`${BASE_API}/publico/puestos/buscar${params}`, { headers: getAuthHeaders() });
+      const response = await fetch(`http://localhost:8080/api/publico/puestos/buscar${params}`, { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
       if (!response.ok) throw new Error(await response.text());
       const res = await response.json();
       setPuestos((res.puestos ?? []).map((p: Puesto) => ({ ...p, tipoCambio: res.tipoCambio })));

@@ -1,97 +1,80 @@
 import { useCallback, useEffect, useState } from 'react';
 import SectionTitle from '../../components/SectionTitle';
 import LoadingBlock from '../../components/LoadingBlock';
-import AccesoRestringido from '../../components/AccesoRestringido';
-import { BASE_API, getAuthHeaders } from '../../services/api';
-import { Sesion, MensajeGlobal, OferentePendiente } from '../../types';
+
+interface MensajeGlobal {
+  tipo: 'success' | 'error' | 'info' | 'warning' | 'danger';
+  texto: string;
+}
+
+interface OferentePendiente {
+  id: number;
+  identificacion: string;
+  nombre: string;
+  primerApellido: string;
+  telefono: string;
+  lugarResidencia: string;
+  usuario: { id: number; correo: string };
+}
 
 interface Props {
-  // Sesión actual del usuario (se usa para verificar rol de administrador)
-  sesion: Sesion | null;
-  // Función de navegación para redirigir al usuario a otras páginas
-  onNavegar: (ruta: string) => void;
-  // Función de callback para mostrar mensajes globales (éxito/error)
   onMensaje: (m: MensajeGlobal) => void;
 }
 
-function AdminOferentesPendientesPage({ sesion, onNavegar, onMensaje }: Props) {
-  // Estado para almacenar la lista de oferentes pendientes de aprobación
+function AdminOferentesPendientesPage({ onMensaje }: Props) {
   const [oferentes, setOferentes] = useState<OferentePendiente[]>([]);
-  // Estado para indicar si se está cargando datos desde el backend
   const [cargando, setCargando] = useState(true);
 
-  // Función memoizada para cargar la lista de oferentes pendientes
-  // useCallback evita recrear la función en cada render
   const cargar = useCallback(() => {
-    setCargando(true); // Indicar que comenzó la carga
-    fetch(`${BASE_API}/admin/oferentes/pendientes`, { headers: getAuthHeaders() })
+    setCargando(true);
+    fetch("http://localhost:8080/api/admin/oferentes/pendientes", { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) })
       .then(async (res) => { if (res.ok) setOferentes(await res.json()); else throw new Error(await res.text()); })
       .catch((e: Error) => onMensaje({ tipo: 'danger', texto: e.message }))
       .finally(() => setCargando(false));
   }, [onMensaje]);
 
-  // Effect que se ejecuta cuando cambia la sesión o la función cargar
-  // Se encarga de cargar inicialmente la lista de oferentes pendientes
   useEffect(() => {
-    // Solo proceder si el usuario es administrador
-    if (sesion?.rol === 'ADMIN') {
-      // Usar setTimeout para evitar bloquear la renderización inicial
-      const timer = setTimeout(() => cargar(), 0);
-      // Limpiar el timeout cuando el componente se desmonte o cambien las dependencias
-      return () => clearTimeout(timer);
-    }
-  }, [sesion, cargar]);
+    const timer = setTimeout(() => cargar(), 0);
+    return () => clearTimeout(timer);
+  }, [cargar]);
 
-  // Función para autorizar un oferente pendiente
   const autorizar = async (id: number) => {
     try {
-      // Llamada al backend para autorizar el oferente
-      const res = await fetch(`${BASE_API}/admin/oferentes/${id}/autorizar`, { method: 'POST', headers: getAuthHeaders() });
+      const res = await fetch(`http://localhost:8080/api/admin/oferentes/${id}/autorizar`, { method: "POST", headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
       if (!res.ok) throw new Error(await res.text());
-      // Mostrar mensaje de éxito
       onMensaje({ tipo: 'success', texto: 'Oferente autorizado.' });
-      // Recargar la lista para mostrar los cambios
       cargar();
     } catch (e) { 
-      // Mostrar mensaje de error si falla la autorización
       onMensaje({ tipo: 'danger', texto: (e as Error).message }); 
     }
   };
 
   return (
-    // Envolver el contenido en AccesoRestringido para verificar permisos de administrador
-    <AccesoRestringido sesion={sesion} rol="ADMIN" onNavegar={onNavegar}>
-      <section className="container py-5">
-        <SectionTitle eyebrow="Administración" title="Oferentes pendientes" />
+    <section className="container py-5">
+      <SectionTitle eyebrow="Administración" title="Oferentes pendientes" />
 
-        {cargando ? <LoadingBlock /> : (
-          <table className="table table-hover">
-            <thead>
-              <tr><th>Nombre</th><th>Correo</th><th>Acción</th></tr>
-            </thead>
-            <tbody>
-              {/* Mostrar mensaje cuando no hay oferentes pendientes */}
-              {oferentes.length === 0 ? (
-                <tr><td colSpan={3} className="text-muted text-center">No hay oferentes pendientes de aprobación.</td></tr>
-              ) : 
-                // Mapear cada oferente pendiente y crear una fila en la tabla
-                oferentes.map((o) => (
-                  <tr key={o.id}>
-                    {/* Mostrar nombre completo del oferente */}
-                    <td className="align-middle">{o.nombre} {o.primerApellido}</td>
-                    {/* Mostrar correo electrónico del oferente */}
-                    <td className="align-middle">{o.usuario?.correo}</td>
-                    {/* Botón para aprobar el oferente */}
-                    <td>
-                      <button className="btn btn-success btn-sm" onClick={() => autorizar(o.id)}>Aprobar</button>
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
-        )}
-      </section>
-    </AccesoRestringido>
+      {cargando ? <LoadingBlock /> : (
+        <table className="table table-hover">
+          <thead>
+            <tr><th>Nombre</th><th>Correo</th><th>Acción</th></tr>
+          </thead>
+          <tbody>
+            {oferentes.length === 0 ? (
+              <tr><td colSpan={3} className="text-muted text-center">No hay oferentes pendientes de aprobación.</td></tr>
+            ) : 
+              oferentes.map((o) => (
+                <tr key={o.id}>
+                  <td className="align-middle">{o.nombre} {o.primerApellido}</td>
+                  <td className="align-middle">{o.usuario?.correo}</td>
+                  <td>
+                    <button className="btn btn-success btn-sm" onClick={() => autorizar(o.id)}>Aprobar</button>
+                  </td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      )}
+    </section>
   );
 }
 

@@ -1,5 +1,16 @@
-import { Puesto } from '../types';
 import { formatSalario } from '../utils/formatters';
+
+interface Puesto {
+  id: number;
+  descripcion: string;
+  salario: number;
+  tipoPublicacion: string;
+  empresa: { id: number; nombre: string; usuarioCorreo: string };
+  activo: boolean;
+  fechaRegistro: string;
+  caracteristicas: { id: number; nombre: string; nivelRequerido: number }[];
+  tipoCambio?: { compra: number; venta: number; fecha: string };
+}
 
 interface Props {
   // Lista de puestos obtenidos de la búsqueda

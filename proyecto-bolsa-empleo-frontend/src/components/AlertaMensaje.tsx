@@ -1,13 +1,10 @@
-// Componente para mostrar mensajes globales (toast/notificaciones) en la interfaz.
-// Se usa para comunicar éxito, error, información o advertencias al usuario
-// de forma no intrusiva y con posibilidad de cerrar manualmente.
-
-import { MensajeGlobal } from '../types';
+interface MensajeGlobal {
+  tipo: 'success' | 'error' | 'info' | 'warning' | 'danger';
+  texto: string;
+}
 
 interface Props {
-  // El mensaje a mostrar (null si no hay mensaje)
   mensaje: MensajeGlobal | null;
-  // Función de callback para cuando el usuario cierra el mensaje
   onCerrar: () => void;
 }
 

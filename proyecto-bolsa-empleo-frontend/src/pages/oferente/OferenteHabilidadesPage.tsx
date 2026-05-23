@@ -1,20 +1,35 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import SectionTitle from '../../components/SectionTitle';
 import LoadingBlock from '../../components/LoadingBlock';
-import { BASE_API, getAuthHeaders } from '../../services/api';
-import { Sesion, MensajeGlobal, Caracteristica, Habilidad } from '../../types';
+
+
+interface MensajeGlobal {
+  tipo: 'success' | 'error' | 'info' | 'warning' | 'danger';
+  texto: string;
+}
+
+interface Caracteristica {
+  id: number;
+  nombre: string;
+  padreId: number | null;
+  hijos: Caracteristica[];
+}
+
+interface Habilidad {
+  id: number;
+  caracteristica: { id: number; nombre: string };
+  nivel: number;
+}
 
 interface Props {
-  // Sesión actual del usuario (se usa para verificar rol de oferente)
-  sesion: Sesion | null;
-  // Función de navegación para redirigir al usuario a otras páginas
-  onNavegar: (ruta: string) => void;
   // Función de callback para mostrar mensajes globales (éxito/error)
   onMensaje: (m: MensajeGlobal) => void;
 }
 
 // Componente principal para gestionar las habilidades del oferente
-function OferenteHabilidadesPage({ sesion, onNavegar, onMensaje }: Props) {
+function OferenteHabilidadesPage({ onMensaje }: Props) {
+  const navigate = useNavigate();
   // Lista de habilidades ya registradas del oferente
   const [habilidades, setHabilidades] = useState<Habilidad[]>([]);
   // Subcategorías visibles en la navegación actual
@@ -36,7 +51,7 @@ function OferenteHabilidadesPage({ sesion, onNavegar, onMensaje }: Props) {
 
   // Recargar la lista de habilidades desde el backend
   const cargarHabilidades = () =>
-    fetch(`${BASE_API}/oferente/habilidades`, { headers: getAuthHeaders() })
+    fetch("http://localhost:8080/api/oferente/habilidades", { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) })
       .then(async (res) => { if (res.ok) return res.json(); else throw new Error(await res.text()); })
       .then(setHabilidades)
       .catch((e: Error) => onMensaje({ tipo: 'danger', texto: e.message }));
@@ -44,14 +59,14 @@ function OferenteHabilidadesPage({ sesion, onNavegar, onMensaje }: Props) {
   // Cargar subcategorías de un padre (o raíces si padreId es null)
   const cargarSubcategorias = async (padreId: number | null = null) => {
     try {
-      const url = padreId ? `${BASE_API}/publico/caracteristicas?padreId=${padreId}` : `${BASE_API}/publico/caracteristicas`;
-      const dataRes = await fetch(url, { headers: getAuthHeaders() });
+      const url = padreId ? `http://localhost:8080/api/publico/caracteristicas?padreId=${padreId}` : `http://localhost:8080/api/publico/caracteristicas`;
+      const dataRes = await fetch(url, { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
       if (!dataRes.ok) throw new Error(await dataRes.text());
       const data: Caracteristica[] = await dataRes.json();
       setSubcategorias(data);
       const nuevasHojas = new Set(hojas);
       await Promise.all(data.map(async (n) => {
-        const hijosRes = await fetch(`${BASE_API}/publico/caracteristicas?padreId=${n.id}`, { headers: getAuthHeaders() });
+        const hijosRes = await fetch(`http://localhost:8080/api/publico/caracteristicas?padreId=${n.id}`, { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
         if (!hijosRes.ok) throw new Error(await hijosRes.text());
         const hijos = await hijosRes.json();
         if (hijos.length === 0) nuevasHojas.add(n.id);
@@ -65,10 +80,9 @@ function OferenteHabilidadesPage({ sesion, onNavegar, onMensaje }: Props) {
 
   // Effect para cargar habilidades y categorías raíz al montar el componente
   useEffect(() => {
-    if (!sesion || sesion.rol !== 'OFERENTE') return;
     Promise.all([
-      fetch(`${BASE_API}/oferente/habilidades`, { headers: getAuthHeaders() }),
-      fetch(`${BASE_API}/publico/caracteristicas`, { headers: getAuthHeaders() })
+      fetch("http://localhost:8080/api/oferente/habilidades", { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) }),
+      fetch("http://localhost:8080/api/publico/caracteristicas", { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) })
     ])
       .then(async ([hRes, rRes]) => {
         if (!hRes.ok) throw new Error(await hRes.text());
@@ -78,17 +92,7 @@ function OferenteHabilidadesPage({ sesion, onNavegar, onMensaje }: Props) {
       .then(([h, r]) => { setHabilidades(h); setSubcategorias(r); })
       .catch((e: Error) => onMensaje({ tipo: 'danger', texto: e.message }))
       .finally(() => setCargando(false));
-  }, [sesion, onMensaje]);
-
-  // Verificar que el usuario esté autenticado y tenga rol de oferente
-  if (!sesion || sesion.rol !== 'OFERENTE') {
-    return (
-      <section className="container py-5">
-        <div className="alert alert-warning">Acceso restringido a oferentes autorizados.</div>
-        <button className="btn btn-outline-secondary" onClick={() => onNavegar('/')}>Volver</button>
-      </section>
-    );
-  }
+  }, [onMensaje]);
 
   // Navegar a una subcategoría (hacia adentro del árbol)
   const entrar = async (sub: Caracteristica) => {
@@ -127,7 +131,7 @@ function OferenteHabilidadesPage({ sesion, onNavegar, onMensaje }: Props) {
     const id = selId || actual?.id;
     if (!id) return;
     try {
-      const agregarRes = await fetch(`${BASE_API}/oferente/habilidades`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }, body: JSON.stringify({ caracteristicaId: Number(id), nivel: Number(nivel) }) });
+      const agregarRes = await fetch("http://localhost:8080/api/oferente/habilidades", { method: 'POST', headers: new Headers({ "Content-Type": "application/json", "Authorization": "Bearer " + localStorage.getItem("token") }), body: JSON.stringify({ caracteristicaId: Number(id), nivel: Number(nivel) }) });
       if (!agregarRes.ok) throw new Error(await agregarRes.text());
       onMensaje({ tipo: 'success', texto: 'Habilidad agregada.' });
       setSelId(null);
@@ -142,7 +146,7 @@ function OferenteHabilidadesPage({ sesion, onNavegar, onMensaje }: Props) {
   const eliminar = async (id: number) => {
     if (!window.confirm('¿Eliminar esta habilidad?')) return;
     try {
-      const eliminarRes = await fetch(`${BASE_API}/oferente/habilidades/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+      const eliminarRes = await fetch(`http://localhost:8080/api/oferente/habilidades/${id}`, { method: 'DELETE', headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
       if (!eliminarRes.ok) throw new Error(await eliminarRes.text());
       onMensaje({ tipo: 'success', texto: 'Habilidad eliminada.' });
       cargarHabilidades();

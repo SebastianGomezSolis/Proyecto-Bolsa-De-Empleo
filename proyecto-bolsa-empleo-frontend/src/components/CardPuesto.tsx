@@ -2,7 +2,17 @@
 // Presenta la información clave de un puesto en formato de tarjeta visual,
 // incluyendo tipo de publicación, fecha, descripción, salario y empresa.
 
-import { Puesto } from '../types';
+interface Puesto {
+  id: number;
+  descripcion: string;
+  salario: number;
+  tipoPublicacion: string;
+  empresa: { id: number; nombre: string; usuarioCorreo: string };
+  activo: boolean;
+  fechaRegistro: string;
+  caracteristicas: { id: number; nombre: string; nivelRequerido: number }[];
+  tipoCambio?: { compra: number; venta: number; fecha: string };
+}
 import { formatSalario, formatFecha } from '../utils/formatters';
 
 interface Props {

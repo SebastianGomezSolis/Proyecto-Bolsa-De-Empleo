@@ -1,22 +1,21 @@
-// Página de registro de empresa.
-// Permite crear una cuenta empresarial con datos de contacto y descripcion.
-// El registro queda pendiente de aprobación por un administrador.
-
 import { useState } from 'react';
-import { BASE_API, getAuthHeaders } from '../../services/api';
-import { MensajeGlobal } from '../../types';
+import { useNavigate } from 'react-router-dom';
 
-// Valores iniciales del formulario
+interface MensajeGlobal {
+  tipo: 'success' | 'error' | 'info' | 'warning' | 'danger';
+  texto: string;
+}
+
 const FORM_EMPRESA = { correo: '', clave: '', nombre: '', localizacion: '', telefono: '', descripcion: '' };
 
 interface Props {
-  onNavegar: (ruta: string) => void;
   onMensaje: (m: MensajeGlobal) => void;
 }
 
 type FormValues = Record<string, string>;
 
-function RegistroEmpresaPage({ onNavegar, onMensaje }: Props) {
+function RegistroEmpresaPage({ onMensaje }: Props) {
+  const navigate = useNavigate();
   const [form, setForm] = useState<FormValues>({ ...FORM_EMPRESA });
   const [cargando, setCargando] = useState(false);
 
@@ -28,14 +27,14 @@ function RegistroEmpresaPage({ onNavegar, onMensaje }: Props) {
     e.preventDefault();
     setCargando(true);
     try {
-      const response = await fetch(`${BASE_API}/auth/registro/empresa`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      const response = await fetch("http://localhost:8080/api/auth/registro/empresa", {
+        method: "POST",
+        headers: new Headers({ "Content-Type": "application/json" }),
         body: JSON.stringify(form),
       });
       if (!response.ok) throw new Error(await response.text());
       onMensaje({ tipo: 'success', texto: 'Registro exitoso. Espere la aprobación del administrador.' });
-      onNavegar('/login');
+      navigate('/login');
     } catch (error) {
       onMensaje({ tipo: 'danger', texto: (error as Error).message });
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -94,13 +93,13 @@ function RegistroEmpresaPage({ onNavegar, onMensaje }: Props) {
 
               <p className="text-center mt-3 mb-0">
                 ¿Ya tiene una cuenta?{' '}
-                <a href="/login" onClick={(e) => { e.preventDefault(); onNavegar('/login'); }} style={{ cursor: 'pointer' }}>
+                <a href="/login" onClick={(e) => { e.preventDefault(); navigate('/login'); }} style={{ cursor: 'pointer' }}>
                   Iniciar sesión
                 </a>
               </p>
               <p className="text-center mb-0">
                 ¿Es un oferente?{' '}
-                <a href="/registro/oferente" onClick={(e) => { e.preventDefault(); onNavegar('/registro/oferente'); }} style={{ cursor: 'pointer' }}>
+                <a href="/registro/oferente" onClick={(e) => { e.preventDefault(); navigate('/registro/oferente'); }} style={{ cursor: 'pointer' }}>
                   Registrarse como oferente
                 </a>
               </p>

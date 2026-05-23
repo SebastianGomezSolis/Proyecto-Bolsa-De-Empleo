@@ -1,8 +1,8 @@
-// Funciones de formato para presentar datos de forma amigable al usuario.
-// Estas funciones convierten valores crudos del backend en strings legibles
-// con formato local (moneda, fechas, roles, etc.) según la locale es-CR.
-
-import { TipoCambio } from '../types';
+interface TipoCambio {
+  compra: number;
+  venta: number;
+  fecha: string;
+}
 
 // Formatea un rol de usuario para mostrarlo en la interfaz.
 export function formatRol(rol?: string): string {

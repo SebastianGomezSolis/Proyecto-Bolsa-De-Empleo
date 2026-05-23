@@ -1,42 +1,29 @@
-// Página de administración para generar reportes de puestos publicados.
-// Permite seleccionar mes y año para descargar un PDF con los puestos del período.
-
 import { useState } from 'react';
 import SectionTitle from '../../components/SectionTitle';
-import { API_BASE, obtenerToken } from '../../services/api';
-import { Sesion } from '../../types';
 
 const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
-interface Props {
-  // Sesión actual del usuario (se usa para verificar rol de administrador)
-  sesion: Sesion | null;
-  // Función de navegación para redirigir al usuario a otras páginas
-  onNavegar: (ruta: string) => void;
+interface MensajeGlobal {
+  tipo: 'success' | 'error' | 'info' | 'warning' | 'danger';
+  texto: string;
 }
 
-function AdminReportesPage({ sesion, onNavegar }: Props) {
-  // Estado para el mes seleccionado en el formulario (valor por defecto: mes actual)
+interface Props {
+  onMensaje: (m: MensajeGlobal) => void;
+}
+
+function AdminReportesPage({ onMensaje }: Props) {
   const [mes, setMes] = useState(new Date().getMonth() + 1);
-  // Estado para el año seleccionado en el formulario (valor por defecto: año actual)
   const [anio, setAnio] = useState(new Date().getFullYear());
 
-  // Redirección para usuarios no autenticados o que no son administradores
-  if (!sesion || sesion.rol !== 'ADMIN') {
-    return (
-      <section className="container py-5">
-        <div className="alert alert-danger">Acceso restringido a administradores.</div>
-        <button className="btn btn-outline-secondary" onClick={() => onNavegar('/')}>Volver</button>
-      </section>
-    );
-  }
-
-  // Manejador del formulario: abre el PDF del reporte en una nueva pestaña
   const verPDF = (e: React.FormEvent) => {
-    e.preventDefault(); // Prevenir envío tradicional del formulario
-    const token = obtenerToken();
-    if (!token) return;
-    window.open(`${API_BASE}/api/admin/reportes/pdf?mes=${mes}&anio=${anio}&token=${token}`, '_blank');
+    e.preventDefault();
+    (async () => {
+      const res = await fetch(`http://localhost:8080/api/admin/reportes/pdf?mes=${mes}&anio=${anio}`, { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
+      if (!res.ok) { onMensaje({ tipo: 'danger', texto: await res.text() }); return; }
+      const blob = await res.blob();
+      window.open(URL.createObjectURL(blob), '_blank');
+    })();
   };
 
   return (

@@ -27,26 +27,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         String authHeader = request.getHeader("Authorization");
-        String token = null;
-
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            token = authHeader.substring(7);
-        } else if (request.getParameter("token") != null) {
-            token = request.getParameter("token");
+            try {
+                String token = authHeader.substring(7);
+                Claims claims = jwtService.parsearClaims(token);
+                UsernamePasswordAuthenticationToken auth =
+                        new UsernamePasswordAuthenticationToken(claims, null, Collections.emptyList());
+                auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(auth);
+            } catch (Exception e) {
+                // Token inválido o ausente — no autenticar, seguir sin auth
+                SecurityContextHolder.clearContext();
+            }
         }
-
-        if (token == null) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-        if (jwtService.esValido(token)) {
-            Claims claims = jwtService.parsearClaims(token);
-            UsernamePasswordAuthenticationToken auth =
-                    new UsernamePasswordAuthenticationToken(claims, null, Collections.emptyList());
-            auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(auth);
-        }
-
         filterChain.doFilter(request, response);
     }
 }
