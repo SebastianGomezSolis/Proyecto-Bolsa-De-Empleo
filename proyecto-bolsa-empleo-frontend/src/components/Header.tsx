@@ -9,7 +9,6 @@ interface Sesion {
 }
 
 function limpiarSesion() {
-  localStorage.removeItem('bolsa.session');
   localStorage.removeItem("token");
 }
 

@@ -7,10 +7,6 @@ interface MensajeGlobal {
   texto: string;
 }
 
-function guardarSesion(datos: { id: number; correo: string; rol: string; referenciaId: number; token: string }): void {
-  localStorage.setItem('bolsa.session', JSON.stringify(datos));
-}
-
 interface Props {
   onMensaje: (m: MensajeGlobal) => void;
 }
@@ -50,7 +46,6 @@ function LoginPage({ onMensaje }: Props) {
         localStorage.removeItem('bolsa.clave');
       }
 
-      guardarSesion(datos);
       localStorage.setItem("token", datos.token);
       onMensaje({ tipo: 'success', texto: `Bienvenido, ${datos.correo}.` });
       const destinos: Record<string, string> = { ADMIN: '/admin/dashboard', EMPRESA: '/empresa/dashboard', OFERENTE: '/oferente/dashboard' };

@@ -31,11 +31,26 @@ interface MensajeGlobal {
   texto: string;
 }
 
+function decodificarToken(token: string): { id: number; correo: string; rol: string; referenciaId: number; token: string } | null {
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return {
+            id: payload.id,
+            correo: payload.sub,
+            rol: payload.rol,
+            referenciaId: payload.referenciaId,
+            token: token,
+        };
+    } catch {
+        return null;
+    }
+}
+
 function AppContent() {
     const location = useLocation();
     const navigate = useNavigate();
-    const raw = localStorage.getItem('bolsa.session');
-    const sesion: { id: number; correo: string; rol: string; referenciaId: number; token: string } | null = raw ? JSON.parse(raw) : null;
+    const token = localStorage.getItem('token');
+    const sesion = token ? decodificarToken(token) : null;
     const [mensaje, setMensaje] = useState<MensajeGlobal | null>(null);
 
     return (
