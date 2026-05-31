@@ -44,66 +44,66 @@ function PuestosPublicosPage({ onMensaje }: Props) {
   // Effect que carga todos los puestos públicos al montar el componente
   useEffect(() => {
     fetch("http://localhost:8080/api/publico/puestos", { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) })
-      .then(async (res) => { if (res.ok) return res.json(); throw new Error(await res.text()); })
-      .then((res: PuestosResponse) => {
-        setPuestos(res.puestos ?? []);
-      })
-      .catch((e: Error) => onMensaje({ tipo: 'danger', texto: e.message }))
-      .finally(() => setCargando(false));
+        .then(async (res) => { if (res.ok) return res.json(); throw new Error(await res.text()); })
+        .then((res: PuestosResponse) => {
+          setPuestos(res.puestos ?? []);
+        })
+        .catch((e: Error) => onMensaje({ tipo: 'danger', texto: e.message }))
+        .finally(() => setCargando(false));
   }, [onMensaje]);
 
   // Filtra los puestos localmente por descripción o nombre de empresa
   const filtrados = puestos.filter((p) =>
-    p.descripcion?.toLowerCase().includes(filtro.toLowerCase()) ||
-    p.empresa?.nombre?.toLowerCase().includes(filtro.toLowerCase())
+      p.descripcion?.toLowerCase().includes(filtro.toLowerCase()) ||
+      p.empresa?.nombre?.toLowerCase().includes(filtro.toLowerCase())
   );
 
   return (
-    // Render del listado de puestos públicos con filtro de búsqueda
-    <section className="container py-5">
-      <SectionTitle
-        eyebrow="Puestos disponibles"
-        title="Ofertas laborales"
-        description="Explorá todas las oportunidades laborales publicadas por empresas registradas."
-      />
-
-      {/* Campo de búsqueda para filtrar puestos por descripción o empresa */}
-      <div className="mb-4">
-        <input
-          className="form-control"
-          placeholder="Buscar por descripción o empresa..."
-          value={filtro}
-          onChange={(e) => setFiltro(e.target.value)}
+      // Render del listado de puestos públicos con filtro de búsqueda
+      <section className="container py-5">
+        <SectionTitle
+            eyebrow="Puestos disponibles"
+            title="Ofertas laborales"
+            description="Explorá todas las oportunidades laborales publicadas por empresas registradas."
         />
-      </div>
 
-      {cargando ? <LoadingBlock /> : (
-        <>
-          {filtrados.length === 0 ? (
-            <p className="text-secondary">No se encontraron puestos.</p>
-          ) : (
-            <div className="row g-3">
-              {filtrados.map((p) => (
-                <div key={p.id} className="col-md-6 col-lg-4">
-                  <div className="card shadow-sm border-0 h-100">
-                    <div className="card-body">
-                      <div className="d-flex justify-content-between align-items-start mb-2">
-                        <span className="badge bg-primary-subtle text-primary text-capitalize">{p.tipoPublicacion}</span>
-                        <small className="text-secondary">{formatFecha(p.fechaRegistro)}</small>
-                      </div>
-                      <p className="mb-2" style={{ fontSize: '0.9rem' }}>{p.descripcion}</p>
-                      <div className="fw-semibold text-primary">{formatSalario(p.salario)}</div>
-                      {p.empresa && <div className="text-secondary small mt-1">🏢 {p.empresa.nombre}</div>}
-                    </div>
+        {/* Campo de búsqueda para filtrar puestos por descripción o empresa */}
+        <div className="mb-4">
+          <input
+              className="form-control"
+              placeholder="Buscar por descripción o empresa..."
+              value={filtro}
+              onChange={(e) => setFiltro(e.target.value)}
+          />
+        </div>
+
+        {cargando ? <LoadingBlock /> : (
+            <>
+              {filtrados.length === 0 ? (
+                  <p className="text-secondary">No se encontraron puestos.</p>
+              ) : (
+                  <div className="row g-3">
+                    {filtrados.map((p) => (
+                        <div key={p.id} className="col-md-6 col-lg-4">
+                          <div className="card shadow-sm border-0 h-100">
+                            <div className="card-body">
+                              <div className="d-flex justify-content-between align-items-start mb-2">
+                                <span className="badge bg-primary-subtle text-primary text-capitalize">{p.tipoPublicacion}</span>
+                                <small className="text-secondary">{formatFecha(p.fechaRegistro)}</small>
+                              </div>
+                              <p className="mb-2" style={{ fontSize: '0.9rem' }}>{p.descripcion}</p>
+                              <div className="fw-semibold text-primary">{formatSalario(p.salario)}</div>
+                              {p.empresa && <div className="text-secondary small mt-1">🏢 {p.empresa.nombre}</div>}
+                            </div>
+                          </div>
+                        </div>
+                    ))}
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-          <div className="mt-3 text-secondary small">{filtrados.length} puesto(s) encontrado(s)</div>
-        </>
-      )}
-    </section>
+              )}
+              <div className="mt-3 text-secondary small">{filtrados.length} puesto(s) encontrado(s)</div>
+            </>
+        )}
+      </section>
   );
 }
 

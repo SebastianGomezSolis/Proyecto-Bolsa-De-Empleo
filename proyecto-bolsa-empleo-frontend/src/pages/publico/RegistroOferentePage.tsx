@@ -32,8 +32,8 @@ function RegistroOferentePage({ onMensaje }: Props) {
   // Cargar lista de nacionalidades al montar el componente
   useEffect(() => {
     fetch("http://localhost:8080/api/publico/nacionalidades")
-      .then(async (res) => { if (res.ok) setNacionalidades(await res.json()); })
-      .catch(() => {});
+        .then(async (res) => { if (res.ok) setNacionalidades(await res.json()); })
+        .catch(() => {});
   }, []);
 
   // Actualiza un campo del formulario
@@ -61,83 +61,83 @@ function RegistroOferentePage({ onMensaje }: Props) {
   };
 
   return (
-    <section className="container my-4 flex-grow-1">
-      <div className="row justify-content-center">
-        <div className="col-md-6">
-          <div className="card shadow-sm">
-            <div className="card-body p-4">
-              <div className="text-center mb-3">
-                <h4 className="mb-3">Registro de Oferente</h4>
-                <img
-                  src="/images/oferente.png"
-                  alt="Imagen de oferente"
-                  className="img-fluid"
-                  style={{ maxWidth: '100px' }}
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-                />
+      <section className="container my-4 flex-grow-1">
+        <div className="row justify-content-center">
+          <div className="col-md-6">
+            <div className="card shadow-sm">
+              <div className="card-body p-4">
+                <div className="text-center mb-3">
+                  <h4 className="mb-3">Registro de Oferente</h4>
+                  <img
+                      src="/images/oferente.png"
+                      alt="Imagen de oferente"
+                      className="img-fluid"
+                      style={{ maxWidth: '100px' }}
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                  />
+                </div>
+
+                <form onSubmit={manejarRegistro}>
+                  <div className="mb-3">
+                    <label className="form-label">Identificación</label>
+                    <input type="text" className="form-control" value={form.identificacion} onChange={(e) => set('identificacion', e.target.value)} required />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Nombre</label>
+                    <input type="text" className="form-control" value={form.nombre} onChange={(e) => set('nombre', e.target.value)} required />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Primer apellido</label>
+                    <input type="text" className="form-control" value={form.primerApellido} onChange={(e) => set('primerApellido', e.target.value)} required />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Nacionalidad</label>
+                    <select className="form-select" value={form.isoNacionalidad} onChange={(e) => set('isoNacionalidad', e.target.value)} required>
+                      <option value="">Seleccione una nacionalidad...</option>
+                      {nacionalidades.map((n) => (
+                          <option key={n.iso} value={n.iso}>{n.nombre}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Teléfono</label>
+                    <input type="text" className="form-control" value={form.telefono} onChange={(e) => set('telefono', e.target.value)} />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Correo electrónico</label>
+                    <input type="email" className="form-control" value={form.correo} onChange={(e) => set('correo', e.target.value)} required />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Lugar de residencia</label>
+                    <input type="text" className="form-control" value={form.lugarResidencia} onChange={(e) => set('lugarResidencia', e.target.value)} />
+                  </div>
+                  <div className="mb-4">
+                    <label className="form-label">Contraseña</label>
+                    <input type="password" className="form-control" value={form.clave} onChange={(e) => set('clave', e.target.value)} required />
+                  </div>
+
+                  <button type="submit" className="btn btn-dark w-100" disabled={cargando}>
+                    {cargando ? 'Registrando...' : 'Registrarse'}
+                  </button>
+                </form>
+
+                <p className="text-center mt-3 mb-0">
+                  ¿Ya tiene una cuenta?{' '}
+                  <a href="/login" onClick={(e) => { e.preventDefault(); navigate('/login'); }} style={{ cursor: 'pointer' }}>
+                    Iniciar sesión
+                  </a>
+                </p>
+                <p className="text-center mb-0">
+                  ¿Es una empresa?{' '}
+                  <a href="/registro/empresa" onClick={(e) => { e.preventDefault(); navigate('/registro/empresa'); }} style={{ cursor: 'pointer' }}>
+                    Registrarse como empresa
+                  </a>
+                </p>
               </div>
-
-              <form onSubmit={manejarRegistro}>
-                <div className="mb-3">
-                  <label className="form-label">Identificación</label>
-                  <input type="text" className="form-control" value={form.identificacion} onChange={(e) => set('identificacion', e.target.value)} required />
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Nombre</label>
-                  <input type="text" className="form-control" value={form.nombre} onChange={(e) => set('nombre', e.target.value)} required />
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Primer apellido</label>
-                  <input type="text" className="form-control" value={form.primerApellido} onChange={(e) => set('primerApellido', e.target.value)} required />
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Nacionalidad</label>
-                  <select className="form-select" value={form.isoNacionalidad} onChange={(e) => set('isoNacionalidad', e.target.value)} required>
-                    <option value="">Seleccione una nacionalidad...</option>
-                    {nacionalidades.map((n) => (
-                      <option key={n.iso} value={n.iso}>{n.nombre}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Teléfono</label>
-                  <input type="text" className="form-control" value={form.telefono} onChange={(e) => set('telefono', e.target.value)} />
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Correo electrónico</label>
-                  <input type="email" className="form-control" value={form.correo} onChange={(e) => set('correo', e.target.value)} required />
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Lugar de residencia</label>
-                  <input type="text" className="form-control" value={form.lugarResidencia} onChange={(e) => set('lugarResidencia', e.target.value)} />
-                </div>
-                <div className="mb-4">
-                  <label className="form-label">Contraseña</label>
-                  <input type="password" className="form-control" value={form.clave} onChange={(e) => set('clave', e.target.value)} required />
-                </div>
-
-                <button type="submit" className="btn btn-dark w-100" disabled={cargando}>
-                  {cargando ? 'Registrando...' : 'Registrarse'}
-                </button>
-              </form>
-
-              <p className="text-center mt-3 mb-0">
-                ¿Ya tiene una cuenta?{' '}
-                <a href="/login" onClick={(e) => { e.preventDefault(); navigate('/login'); }} style={{ cursor: 'pointer' }}>
-                  Iniciar sesión
-                </a>
-              </p>
-              <p className="text-center mb-0">
-                ¿Es una empresa?{' '}
-                <a href="/registro/empresa" onClick={(e) => { e.preventDefault(); navigate('/registro/empresa'); }} style={{ cursor: 'pointer' }}>
-                  Registrarse como empresa
-                </a>
-              </p>
             </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
   );
 }
 

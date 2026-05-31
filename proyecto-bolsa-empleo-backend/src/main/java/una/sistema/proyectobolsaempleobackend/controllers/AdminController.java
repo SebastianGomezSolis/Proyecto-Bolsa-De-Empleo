@@ -54,8 +54,7 @@ public class AdminController {
 
     @GetMapping("/caracteristicas")
     @Transactional(readOnly = true)
-    public CaracteristicasAdminResponse caracteristicas(
-            @RequestParam(required = false) Integer actualId) {
+    public CaracteristicasAdminResponse caracteristicas(@RequestParam(required = false) Integer actualId) {
         if (!esAdmin()) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acceso denegado");
 
         CaracteristicasAdminResponse resp = new CaracteristicasAdminResponse();

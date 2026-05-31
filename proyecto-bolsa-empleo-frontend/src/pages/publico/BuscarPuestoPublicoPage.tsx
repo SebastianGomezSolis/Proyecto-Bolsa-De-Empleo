@@ -38,10 +38,10 @@ async function cargarArbolCompleto(padreId: number | null = null): Promise<Carac
   if (!response.ok) throw new Error(await response.text());
   const nodos: Caracteristica[] = await response.json();
   return Promise.all(
-    nodos.map(async (n) => {
-      const hijos = await cargarArbolCompleto(n.id);
-      return { ...n, hijos };
-    })
+      nodos.map(async (n) => {
+        const hijos = await cargarArbolCompleto(n.id);
+        return { ...n, hijos };
+      })
   );
 }
 
@@ -65,14 +65,14 @@ function BuscarPuestoPublicoPage({ onMensaje }: Props) {
   // Effect que carga el árbol completo de características al montar el componente
   useEffect(() => {
     cargarArbolCompleto(null)
-      .then(setRaices)
-      .catch((e: Error) => onMensaje({ tipo: 'danger', texto: e.message }))
-      .finally(() => setCargando(false));
+        .then(setRaices)
+        .catch((e: Error) => onMensaje({ tipo: 'danger', texto: e.message }))
+        .finally(() => setCargando(false));
   }, [onMensaje]);
 
   // Alterna la selección de una característica (agregar o quitar del filtro)
   const toggleSeleccion = (id: number) =>
-    setSeleccionados((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
+      setSeleccionados((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
 
   // Manejador de la búsqueda: envía las características seleccionadas al backend
   const buscar = async (e: React.FormEvent) => {
@@ -95,37 +95,37 @@ function BuscarPuestoPublicoPage({ onMensaje }: Props) {
   const limpiar = () => { setSeleccionados([]); setPuestos(null); };
 
   return (
-    // Render del formulario de búsqueda y los resultados
-    <section className="container py-5">
-      <SectionTitle eyebrow="Búsqueda" title="Buscar puestos" description="Filtrá por características para encontrar puestos disponibles." />
+      // Render del formulario de búsqueda y los resultados
+      <section className="container py-5">
+        <SectionTitle eyebrow="Búsqueda" title="Buscar puestos" description="Filtrá por características para encontrar puestos disponibles." />
 
-      {cargando ? <LoadingBlock /> : (
-        <>
-          <form onSubmit={buscar}>
-            <div className="border rounded p-3 bg-white mb-4">
-              <h6 className="fw-bold mb-3">Buscar puestos por características</h6>
-              <SelectorCaracteristicas raices={raices} seleccionados={seleccionados} onToggle={toggleSeleccion} />
-              <div className="d-flex gap-2 mt-2">
-                <button type="submit" className="btn btn-dark btn-sm" disabled={buscando}>
-                  {buscando ? 'Buscando...' : 'Buscar'}
-                </button>
-                <button type="button" className="btn btn-outline-secondary btn-sm" onClick={limpiar}>Limpiar</button>
-              </div>
-            </div>
-          </form>
-
-          {puestos !== null && (
+        {cargando ? <LoadingBlock /> : (
             <>
-              <h5 className="mb-3">Resultados ({puestos.length})</h5>
-              <ResultadosPuesto puestos={puestos} vacio="No se encontraron puestos con las características seleccionadas." />
+              <form onSubmit={buscar}>
+                <div className="border rounded p-3 bg-white mb-4">
+                  <h6 className="fw-bold mb-3">Buscar puestos por características</h6>
+                  <SelectorCaracteristicas raices={raices} seleccionados={seleccionados} onToggle={toggleSeleccion} />
+                  <div className="d-flex gap-2 mt-2">
+                    <button type="submit" className="btn btn-dark btn-sm" disabled={buscando}>
+                      {buscando ? 'Buscando...' : 'Buscar'}
+                    </button>
+                    <button type="button" className="btn btn-outline-secondary btn-sm" onClick={limpiar}>Limpiar</button>
+                  </div>
+                </div>
+              </form>
+
+              {puestos !== null && (
+                  <>
+                    <h5 className="mb-3">Resultados ({puestos.length})</h5>
+                    <ResultadosPuesto puestos={puestos} vacio="No se encontraron puestos con las características seleccionadas." />
+                  </>
+              )}
+              {puestos === null && (
+                  <p className="text-muted">Seleccioná características y presioná <strong>Buscar</strong> para ver resultados.</p>
+              )}
             </>
-          )}
-          {puestos === null && (
-            <p className="text-muted">Seleccioná características y presioná <strong>Buscar</strong> para ver resultados.</p>
-          )}
-        </>
-      )}
-    </section>
+        )}
+      </section>
   );
 }
 

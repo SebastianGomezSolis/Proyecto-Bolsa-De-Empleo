@@ -48,9 +48,9 @@ function OferenteCVPage({ onMensaje }: Props) {
   // Effect para cargar el perfil del oferente al montar el componente
   useEffect(() => {
     fetch("http://localhost:8080/api/oferente/perfil", { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) })
-      .then(async (res) => { if (res.ok) setOferente(await res.json()); else throw new Error(await res.text()); })
-      .catch((e: Error) => onMensaje({ tipo: 'danger', texto: e.message }))
-      .finally(() => setCargando(false));
+        .then(async (res) => { if (res.ok) setOferente(await res.json()); else throw new Error(await res.text()); })
+        .catch((e: Error) => onMensaje({ tipo: 'danger', texto: e.message }))
+        .finally(() => setCargando(false));
   }, [onMensaje]);
 
   // Subir el archivo CV al backend
@@ -76,59 +76,59 @@ function OferenteCVPage({ onMensaje }: Props) {
   };
 
   return (
-    <section className="container py-5" style={{ maxWidth: '600px' }}>
-      <SectionTitle eyebrow="Oferente" title="Mi CV" />
+      <section className="container py-5" style={{ maxWidth: '600px' }}>
+        <SectionTitle eyebrow="Oferente" title="Mi CV" />
 
-      {cargando ? <LoadingBlock /> : (
-        <>
-          {/* Botones para ver y subir CV */}
-          <div className="d-flex gap-2 mb-4">
-            {oferente?.curriculum ? (
-              <button className="btn btn-dark" onClick={() => descargar("http://localhost:8080/api/oferente/cv")}>Ver CV</button>
-            ) : (
-              <button className="btn btn-dark" disabled>Ver CV</button>
-            )}
-            <button className="btn btn-dark" onClick={() => setMostrarSubir(true)}>Subir CV</button>
-          </div>
+        {cargando ? <LoadingBlock /> : (
+            <>
+              {/* Botones para ver y subir CV */}
+              <div className="d-flex gap-2 mb-4">
+                {oferente?.curriculum ? (
+                    <button className="btn btn-dark" onClick={() => descargar("http://localhost:8080/api/oferente/cv")}>Ver CV</button>
+                ) : (
+                    <button className="btn btn-dark" disabled>Ver CV</button>
+                )}
+                <button className="btn btn-dark" onClick={() => setMostrarSubir(true)}>Subir CV</button>
+              </div>
 
-          {/* Mensaje informativo cuando no hay CV subido */}
-          {!mostrarSubir && !oferente?.curriculum && (
-            <div className="alert alert-warning" style={{ maxWidth: '450px' }}>
-              Aún no tenés un CV subido. Presioná <strong>Subir CV</strong> para agregar uno.
-            </div>
-          )}
-          {/* Mensaje informativo cuando ya hay un CV subido */}
-          {!mostrarSubir && oferente?.curriculum && (
-            <div className="alert alert-success" style={{ maxWidth: '450px' }}>
-              Ya tenés un CV subido. Podés verlo o reemplazarlo cuando quieras.
-            </div>
-          )}
+              {/* Mensaje informativo cuando no hay CV subido */}
+              {!mostrarSubir && !oferente?.curriculum && (
+                  <div className="alert alert-warning" style={{ maxWidth: '450px' }}>
+                    Aún no tenés un CV subido. Presioná <strong>Subir CV</strong> para agregar uno.
+                  </div>
+              )}
+              {/* Mensaje informativo cuando ya hay un CV subido */}
+              {!mostrarSubir && oferente?.curriculum && (
+                  <div className="alert alert-success" style={{ maxWidth: '450px' }}>
+                    Ya tenés un CV subido. Podés verlo o reemplazarlo cuando quieras.
+                  </div>
+              )}
 
-          {/* Formulario para subir un nuevo CV (solo PDF) */}
-          {mostrarSubir && (
-            <div className="border rounded p-4 bg-white" style={{ maxWidth: '450px' }}>
-              <h5 className="mb-3">Subir nuevo CV</h5>
-              <p className="text-muted" style={{ fontSize: '0.88rem' }}>
-                Solo se aceptan archivos <strong>PDF</strong>. Si ya tenés uno subido, será reemplazado.
-              </p>
-              <form onSubmit={subirCV}>
-                <div className="mb-3">
-                  <label className="form-label fw-semibold">Archivo PDF</label>
-                  <input type="file" className="form-control" accept="application/pdf" required
-                    onChange={(e) => setArchivo(e.target.files ? e.target.files[0] : null)} />
-                </div>
-                <div className="d-flex gap-2">
-                  <button type="submit" className="btn btn-dark" disabled={subiendo}>
-                    {subiendo ? 'Subiendo...' : 'Subir'}
-                  </button>
-                  <button type="button" className="btn btn-outline-dark" onClick={() => setMostrarSubir(false)}>Cancelar</button>
-                </div>
-              </form>
-            </div>
-          )}
-        </>
-      )}
-    </section>
+              {/* Formulario para subir un nuevo CV (solo PDF) */}
+              {mostrarSubir && (
+                  <div className="border rounded p-4 bg-white" style={{ maxWidth: '450px' }}>
+                    <h5 className="mb-3">Subir nuevo CV</h5>
+                    <p className="text-muted" style={{ fontSize: '0.88rem' }}>
+                      Solo se aceptan archivos <strong>PDF</strong>. Si ya tenés uno subido, será reemplazado.
+                    </p>
+                    <form onSubmit={subirCV}>
+                      <div className="mb-3">
+                        <label className="form-label fw-semibold">Archivo PDF</label>
+                        <input type="file" className="form-control" accept="application/pdf" required
+                               onChange={(e) => setArchivo(e.target.files ? e.target.files[0] : null)} />
+                      </div>
+                      <div className="d-flex gap-2">
+                        <button type="submit" className="btn btn-dark" disabled={subiendo}>
+                          {subiendo ? 'Subiendo...' : 'Subir'}
+                        </button>
+                        <button type="button" className="btn btn-outline-dark" onClick={() => setMostrarSubir(false)}>Cancelar</button>
+                      </div>
+                    </form>
+                  </div>
+              )}
+            </>
+        )}
+      </section>
   );
 }
 

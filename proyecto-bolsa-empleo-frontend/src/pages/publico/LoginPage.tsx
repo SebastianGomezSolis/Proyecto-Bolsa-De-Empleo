@@ -18,7 +18,7 @@ function LoginPage({ onMensaje }: Props) {
     clave: localStorage.getItem('bolsa.clave') ?? '',
   });
   const [recordar, setRecordar] = useState(
-    () => localStorage.getItem('bolsa.recordar') === 'true'
+      () => localStorage.getItem('bolsa.recordar') === 'true'
   );
   const [cargando, setCargando] = useState(false);
 
@@ -58,60 +58,60 @@ function LoginPage({ onMensaje }: Props) {
   };
 
   return (
-    <section className="container py-5">
-      <div className="row justify-content-center">
-        <div className="col-lg-5 col-xl-4">
-          <div className="card shadow-lg border-0">
-            <div className="card-body p-4 p-md-5">
-              <SectionTitle
-                eyebrow="Acceso"
-                title="Iniciar sesión"
-                description="Ingresá con tu correo y contraseña."
-              />
-              <form onSubmit={manejarLogin} className="row g-3">
-                <div className="col-12">
-                  <label className="form-label">Correo electrónico</label>
-                  <input
-                    type="email"
-                    className="form-control"
-                    value={form.correo}
-                    onChange={(e) => set('correo', e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="col-12">
-                  <label className="form-label">Contraseña</label>
-                  <input
-                    type="password"
-                    className="form-control"
-                    value={form.clave}
-                    onChange={(e) => set('clave', e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="col-12 d-flex align-items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="recordar"
-                    className="form-check-input m-0"
-                    checked={recordar}
-                    onChange={(e) => setRecordar(e.target.checked)}
-                  />
-                  <label htmlFor="recordar" className="form-check-label">
-                    Recordar credenciales
-                  </label>
-                </div>
-                <div className="col-12 d-grid">
-                  <button className="btn btn-primary fw-semibold" disabled={cargando}>
-                    {cargando ? 'Ingresando...' : 'Iniciar sesión'}
-                  </button>
-                </div>
-              </form>
+      <section className="container py-5">
+        <div className="row justify-content-center">
+          <div className="col-lg-5 col-xl-4">
+            <div className="card shadow-lg border-0">
+              <div className="card-body p-4 p-md-5">
+                <SectionTitle
+                    eyebrow="Acceso"
+                    title="Iniciar sesión"
+                    description="Ingresá con tu correo y contraseña."
+                />
+                <form onSubmit={manejarLogin} className="row g-3">
+                  <div className="col-12">
+                    <label className="form-label">Correo electrónico</label>
+                    <input
+                        type="email"
+                        className="form-control"
+                        value={form.correo}
+                        onChange={(e) => set('correo', e.target.value)}
+                        required
+                    />
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label">Contraseña</label>
+                    <input
+                        type="password"
+                        className="form-control"
+                        value={form.clave}
+                        onChange={(e) => set('clave', e.target.value)}
+                        required
+                    />
+                  </div>
+                  <div className="col-12 d-flex align-items-center gap-2">
+                    <input
+                        type="checkbox"
+                        id="recordar"
+                        className="form-check-input m-0"
+                        checked={recordar}
+                        onChange={(e) => setRecordar(e.target.checked)}
+                    />
+                    <label htmlFor="recordar" className="form-check-label">
+                      Recordar credenciales
+                    </label>
+                  </div>
+                  <div className="col-12 d-grid">
+                    <button className="btn btn-primary fw-semibold" disabled={cargando}>
+                      {cargando ? 'Ingresando...' : 'Iniciar sesión'}
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
   );
 }
 

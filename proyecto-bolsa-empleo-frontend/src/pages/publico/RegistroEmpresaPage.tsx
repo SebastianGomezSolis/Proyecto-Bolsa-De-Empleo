@@ -44,70 +44,70 @@ function RegistroEmpresaPage({ onMensaje }: Props) {
   };
 
   return (
-    <section className="container my-4 flex-grow-1">
-      <div className="row justify-content-center">
-        <div className="col-md-6">
-          <div className="card shadow-sm">
-            <div className="card-body p-4">
-              <div className="text-center mb-3">
-                <h4 className="mb-3">Registro de Empresa</h4>
-                <img
-                  src="/images/empresas.png"
-                  alt="Imagen de empresa"
-                  className="img-fluid"
-                  style={{ maxWidth: '100px' }}
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-                />
+      <section className="container my-4 flex-grow-1">
+        <div className="row justify-content-center">
+          <div className="col-md-6">
+            <div className="card shadow-sm">
+              <div className="card-body p-4">
+                <div className="text-center mb-3">
+                  <h4 className="mb-3">Registro de Empresa</h4>
+                  <img
+                      src="/images/empresas.png"
+                      alt="Imagen de empresa"
+                      className="img-fluid"
+                      style={{ maxWidth: '100px' }}
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                  />
+                </div>
+
+                <form onSubmit={manejarRegistro}>
+                  <div className="mb-3">
+                    <label className="form-label">Nombre de la empresa</label>
+                    <input type="text" className="form-control" value={form.nombre} onChange={(e) => set('nombre', e.target.value)} required />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Localización</label>
+                    <input type="text" className="form-control" value={form.localizacion} onChange={(e) => set('localizacion', e.target.value)} />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Correo electrónico</label>
+                    <input type="email" className="form-control" value={form.correo} onChange={(e) => set('correo', e.target.value)} required />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Teléfono</label>
+                    <input type="text" className="form-control" value={form.telefono} onChange={(e) => set('telefono', e.target.value)} />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Descripción</label>
+                    <textarea className="form-control" rows={3} value={form.descripcion} onChange={(e) => set('descripcion', e.target.value)} />
+                  </div>
+                  <div className="mb-4">
+                    <label className="form-label">Contraseña</label>
+                    <input type="password" className="form-control" value={form.clave} onChange={(e) => set('clave', e.target.value)} required />
+                  </div>
+
+                  <button type="submit" className="btn btn-dark w-100" disabled={cargando}>
+                    {cargando ? 'Registrando...' : 'Registrarse'}
+                  </button>
+                </form>
+
+                <p className="text-center mt-3 mb-0">
+                  ¿Ya tiene una cuenta?{' '}
+                  <a href="/login" onClick={(e) => { e.preventDefault(); navigate('/login'); }} style={{ cursor: 'pointer' }}>
+                    Iniciar sesión
+                  </a>
+                </p>
+                <p className="text-center mb-0">
+                  ¿Es un oferente?{' '}
+                  <a href="/registro/oferente" onClick={(e) => { e.preventDefault(); navigate('/registro/oferente'); }} style={{ cursor: 'pointer' }}>
+                    Registrarse como oferente
+                  </a>
+                </p>
               </div>
-
-              <form onSubmit={manejarRegistro}>
-                <div className="mb-3">
-                  <label className="form-label">Nombre de la empresa</label>
-                  <input type="text" className="form-control" value={form.nombre} onChange={(e) => set('nombre', e.target.value)} required />
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Localización</label>
-                  <input type="text" className="form-control" value={form.localizacion} onChange={(e) => set('localizacion', e.target.value)} />
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Correo electrónico</label>
-                  <input type="email" className="form-control" value={form.correo} onChange={(e) => set('correo', e.target.value)} required />
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Teléfono</label>
-                  <input type="text" className="form-control" value={form.telefono} onChange={(e) => set('telefono', e.target.value)} />
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Descripción</label>
-                  <textarea className="form-control" rows={3} value={form.descripcion} onChange={(e) => set('descripcion', e.target.value)} />
-                </div>
-                <div className="mb-4">
-                  <label className="form-label">Contraseña</label>
-                  <input type="password" className="form-control" value={form.clave} onChange={(e) => set('clave', e.target.value)} required />
-                </div>
-
-                <button type="submit" className="btn btn-dark w-100" disabled={cargando}>
-                  {cargando ? 'Registrando...' : 'Registrarse'}
-                </button>
-              </form>
-
-              <p className="text-center mt-3 mb-0">
-                ¿Ya tiene una cuenta?{' '}
-                <a href="/login" onClick={(e) => { e.preventDefault(); navigate('/login'); }} style={{ cursor: 'pointer' }}>
-                  Iniciar sesión
-                </a>
-              </p>
-              <p className="text-center mb-0">
-                ¿Es un oferente?{' '}
-                <a href="/registro/oferente" onClick={(e) => { e.preventDefault(); navigate('/registro/oferente'); }} style={{ cursor: 'pointer' }}>
-                  Registrarse como oferente
-                </a>
-              </p>
             </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
   );
 }
 

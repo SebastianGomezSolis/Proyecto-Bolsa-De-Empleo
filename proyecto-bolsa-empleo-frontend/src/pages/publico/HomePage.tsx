@@ -38,60 +38,60 @@ function HomePage({ onMensaje }: Props) {
   // Effect que carga los últimos puestos públicos al montar el componente
   useEffect(() => {
     fetch("http://localhost:8080/api/publico/puestos/ultimos", { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) })
-      .then(async (res) => { if (res.ok) return res.json(); throw new Error(await res.text()); })
-      .then((res: PuestosResponse) => {
-        setPuestos((res.puestos ?? []).map((p: Puesto) => ({ ...p, tipoCambio: res.tipoCambio })));
-      })
-      .catch((e: Error) => onMensaje({ tipo: 'danger', texto: e.message }))
-      .finally(() => setCargando(false));
+        .then(async (res) => { if (res.ok) return res.json(); throw new Error(await res.text()); })
+        .then((res: PuestosResponse) => {
+          setPuestos((res.puestos ?? []).map((p: Puesto) => ({ ...p, tipoCambio: res.tipoCambio })));
+        })
+        .catch((e: Error) => onMensaje({ tipo: 'danger', texto: e.message }))
+        .finally(() => setCargando(false));
   }, [onMensaje]);
 
   return (
-    <>
-      <section className="container my-4">
-        <SectionTitle
-          eyebrow="Últimas ofertas"
-          title="Bolsa de Empleo"
-          description="Últimos 5 puestos públicos disponibles."
-        />
-        {cargando ? <LoadingBlock /> : (
-          <div className="row g-3 align-items-start">
-            {puestos.length === 0 ? (
-              <div className="col-12"><p className="text-secondary">No hay puestos públicos registrados aún.</p></div>
-            ) : puestos.map((p, i) => (
-              <div key={p.id} className="col-md-4">
-                <div className="card h-100">
-                  <div className="card-body d-flex flex-column">
-                    <h6 className="fw-bold mb-0">{p.empresa?.nombre}</h6>
-                    <p className="text-muted mb-2">{p.descripcion}</p>
-                    <p><strong>Salario:</strong> {formatSalario(p.salario, p.tipoCambio)}</p>
-                    {!p.tipoCambio && <p className="text-muted small">Tipo de cambio no disponible</p>}
-                    <div className="mt-auto">
-                      <a className="btn btn-outline-dark w-100" data-bs-toggle="collapse"
-                         href={`#detalle-${i}`} role="button">
-                        Ver detalle
-                      </a>
-                      <div className="collapse mt-2 border rounded p-2 bg-white" id={`detalle-${i}`}>
-                        <p className="fw-bold mb-1">{p.descripcion}</p>
-                        {p.caracteristicas && p.caracteristicas.length > 0 ? (
-                          <ul className="mb-0">
-                            {p.caracteristicas.map((c) => (
-                              <li key={c.id}>{c.nombre} (nivel {c.nivelRequerido})</li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <p className="text-muted small mb-0">Sin características requeridas</p>
-                        )}
+      <>
+        <section className="container my-4">
+          <SectionTitle
+              eyebrow="Últimas ofertas"
+              title="Bolsa de Empleo"
+              description="Últimos 5 puestos públicos disponibles."
+          />
+          {cargando ? <LoadingBlock /> : (
+              <div className="row g-3 align-items-start">
+                {puestos.length === 0 ? (
+                    <div className="col-12"><p className="text-secondary">No hay puestos públicos registrados aún.</p></div>
+                ) : puestos.map((p, i) => (
+                    <div key={p.id} className="col-md-4">
+                      <div className="card h-100">
+                        <div className="card-body d-flex flex-column">
+                          <h6 className="fw-bold mb-0">{p.empresa?.nombre}</h6>
+                          <p className="text-muted mb-2">{p.descripcion}</p>
+                          <p><strong>Salario:</strong> {formatSalario(p.salario, p.tipoCambio)}</p>
+                          {!p.tipoCambio && <p className="text-muted small">Tipo de cambio no disponible</p>}
+                          <div className="mt-auto">
+                            <a className="btn btn-outline-dark w-100" data-bs-toggle="collapse"
+                               href={`#detalle-${i}`} role="button">
+                              Ver detalle
+                            </a>
+                            <div className="collapse mt-2 border rounded p-2 bg-white" id={`detalle-${i}`}>
+                              <p className="fw-bold mb-1">{p.descripcion}</p>
+                              {p.caracteristicas && p.caracteristicas.length > 0 ? (
+                                  <ul className="mb-0">
+                                    {p.caracteristicas.map((c) => (
+                                        <li key={c.id}>{c.nombre} (nivel {c.nivelRequerido})</li>
+                                    ))}
+                                  </ul>
+                              ) : (
+                                  <p className="text-muted small mb-0">Sin características requeridas</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
-        )}
-      </section>
-    </>
+          )}
+        </section>
+      </>
   );
 }
 
