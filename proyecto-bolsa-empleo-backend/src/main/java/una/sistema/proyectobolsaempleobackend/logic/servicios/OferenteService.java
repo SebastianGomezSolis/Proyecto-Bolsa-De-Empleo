@@ -11,7 +11,7 @@ import una.sistema.proyectobolsaempleobackend.logic.model.Usuario;
 
 import java.util.List;
 
-// Servicio para la gestion de oferentes (candidatos求职者として).
+// Servicio para la gestion de oferentes
 // Maneja el registro de oferentes, consulta de datos,
 // autorizacion por parte de un administrador y actualizacion de curriculum.
 @Service
