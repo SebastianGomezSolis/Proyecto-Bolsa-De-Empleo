@@ -49,7 +49,9 @@ function RegistroOferentePage({ onMensaje }: Props) {
         headers: new Headers({ "Content-Type": "application/json" }),
         body: JSON.stringify(form),
       });
-      if (!response.ok) throw new Error(await response.text());
+      if (!response.ok) {
+        throw new Error("No se pudo realizar el registro del oferente");
+      }
       onMensaje({ tipo: 'success', texto: 'Registro exitoso. Espere la aprobación del administrador.' });
       navigate('/login');
     } catch (error) {

@@ -28,7 +28,7 @@ function AdminOferentesPendientesPage({ onMensaje }: Props) {
   const cargar = useCallback(() => {
     setCargando(true);
     fetch("http://localhost:8080/api/admin/oferentes/pendientes", { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) })
-      .then(async (res) => { if (res.ok) setOferentes(await res.json()); else throw new Error(await res.text()); })
+      .then(async (res) => { if (res.ok) setOferentes(await res.json()); else throw new Error("No se pudieron cargar los oferentes pendientes"); })
       .catch((e: Error) => onMensaje({ tipo: 'danger', texto: e.message }))
       .finally(() => setCargando(false));
   }, [onMensaje]);
@@ -41,7 +41,9 @@ function AdminOferentesPendientesPage({ onMensaje }: Props) {
   const autorizar = async (id: number) => {
     try {
       const res = await fetch(`http://localhost:8080/api/admin/oferentes/${id}/autorizar`, { method: "POST", headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) {
+        throw new Error("No se pudo autorizar el oferente");
+      }
       onMensaje({ tipo: 'success', texto: 'Oferente autorizado.' });
       cargar();
     } catch (e) { 

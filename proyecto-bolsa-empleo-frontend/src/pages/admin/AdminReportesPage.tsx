@@ -20,7 +20,10 @@ function AdminReportesPage({ onMensaje }: Props) {
     e.preventDefault();
     (async () => {
       const res = await fetch(`http://localhost:8080/api/admin/reportes/pdf?mes=${mes}&anio=${anio}`, { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
-      if (!res.ok) { onMensaje({ tipo: 'danger', texto: await res.text() }); return; }
+      if (!res.ok) {
+        onMensaje({ tipo: 'danger', texto: "No se pudo generar el reporte" });
+        return;
+      }
       const blob = await res.blob();
       window.open(URL.createObjectURL(blob), '_blank');
     })();

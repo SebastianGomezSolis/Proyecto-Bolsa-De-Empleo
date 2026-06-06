@@ -27,7 +27,7 @@ function AdminPendientesPage({ onMensaje }: Props) {
   const cargar = useCallback(() => {
     setCargando(true);
     fetch("http://localhost:8080/api/admin/empresas/pendientes", { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) })
-      .then(async (res) => { if (res.ok) setEmpresas(await res.json()); else throw new Error(await res.text()); })
+      .then(async (res) => { if (res.ok) setEmpresas(await res.json()); else throw new Error("No se pudieron cargar las empresas pendientes"); })
       .catch((e: Error) => onMensaje({ tipo: 'danger', texto: e.message }))
       .finally(() => setCargando(false));
   }, [onMensaje]);
@@ -40,7 +40,9 @@ function AdminPendientesPage({ onMensaje }: Props) {
   const autorizar = async (id: number) => {
     try {
       const res = await fetch(`http://localhost:8080/api/admin/empresas/${id}/autorizar`, { method: "POST", headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) {
+        throw new Error("No se pudo autorizar la empresa");
+      }
       onMensaje({ tipo: 'success', texto: 'Empresa autorizada.' });
       cargar();
     } catch (e) { onMensaje({ tipo: 'danger', texto: (e as Error).message }); }

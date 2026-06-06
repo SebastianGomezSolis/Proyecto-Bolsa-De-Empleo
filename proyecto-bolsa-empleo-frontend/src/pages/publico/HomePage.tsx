@@ -38,7 +38,7 @@ function HomePage({ onMensaje }: Props) {
   // Effect que carga los últimos puestos públicos al montar el componente
   useEffect(() => {
     fetch("http://localhost:8080/api/publico/puestos/ultimos", { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) })
-        .then(async (res) => { if (res.ok) return res.json(); throw new Error(await res.text()); })
+        .then(async (res) => { if (res.ok) return res.json();throw new Error("No se pudieron cargar las últimas ofertas"); })
         .then((res: PuestosResponse) => {
           setPuestos((res.puestos ?? []).map((p: Puesto) => ({ ...p, tipoCambio: res.tipoCambio })));
         })

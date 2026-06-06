@@ -52,7 +52,7 @@ function OferenteHabilidadesPage({ onMensaje }: Props) {
   // Recargar la lista de habilidades desde el backend
   const cargarHabilidades = () =>
       fetch("http://localhost:8080/api/oferente/habilidades", { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) })
-          .then(async (res) => { if (res.ok) return res.json(); else throw new Error(await res.text()); })
+          .then(async (res) => { if (res.ok) return res.json(); else throw new Error("No se pudieron cargar las habilidades"); })
           .then(setHabilidades)
           .catch((e: Error) => onMensaje({ tipo: 'danger', texto: e.message }));
 
@@ -61,13 +61,17 @@ function OferenteHabilidadesPage({ onMensaje }: Props) {
     try {
       const url = padreId ? `http://localhost:8080/api/publico/caracteristicas?padreId=${padreId}` : `http://localhost:8080/api/publico/caracteristicas`;
       const dataRes = await fetch(url, { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
-      if (!dataRes.ok) throw new Error(await dataRes.text());
+      if (!dataRes.ok) {
+        throw new Error("No se pudieron cargar las características");
+      }
       const data: Caracteristica[] = await dataRes.json();
       setSubcategorias(data);
       const nuevasHojas = new Set(hojas);
       await Promise.all(data.map(async (n) => {
         const hijosRes = await fetch(`http://localhost:8080/api/publico/caracteristicas?padreId=${n.id}`, { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
-        if (!hijosRes.ok) throw new Error(await hijosRes.text());
+        if (!hijosRes.ok) {
+          throw new Error("No se pudieron cargar las características");
+        }
         const hijos = await hijosRes.json();
         if (hijos.length === 0) nuevasHojas.add(n.id);
         else nuevasHojas.delete(n.id);
@@ -85,8 +89,13 @@ function OferenteHabilidadesPage({ onMensaje }: Props) {
       fetch("http://localhost:8080/api/publico/caracteristicas", { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) })
     ])
         .then(async ([hRes, rRes]) => {
-          if (!hRes.ok) throw new Error(await hRes.text());
-          if (!rRes.ok) throw new Error(await rRes.text());
+          if (!hRes.ok) {
+            throw new Error("No se pudieron cargar las habilidades");
+          }
+
+          if (!rRes.ok) {
+            throw new Error("No se pudieron cargar las características");
+          }
           return Promise.all([hRes.json(), rRes.json()]);
         })
         .then(([h, r]) => { setHabilidades(h); setSubcategorias(r); })
@@ -132,7 +141,9 @@ function OferenteHabilidadesPage({ onMensaje }: Props) {
     if (!id) return;
     try {
       const agregarRes = await fetch("http://localhost:8080/api/oferente/habilidades", { method: 'POST', headers: new Headers({ "Content-Type": "application/json", "Authorization": "Bearer " + localStorage.getItem("token") }), body: JSON.stringify({ caracteristicaId: Number(id), nivel: Number(nivel) }) });
-      if (!agregarRes.ok) throw new Error(await agregarRes.text());
+      if (!agregarRes.ok) {
+        throw new Error("No se pudo agregar la habilidad");
+      }
       onMensaje({ tipo: 'success', texto: 'Habilidad agregada.' });
       setSelId(null);
       setNivel(1);
@@ -147,7 +158,9 @@ function OferenteHabilidadesPage({ onMensaje }: Props) {
     if (!window.confirm('¿Eliminar esta habilidad?')) return;
     try {
       const eliminarRes = await fetch(`http://localhost:8080/api/oferente/habilidades/${id}`, { method: 'DELETE', headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
-      if (!eliminarRes.ok) throw new Error(await eliminarRes.text());
+      if (!eliminarRes.ok) {
+        throw new Error("No se pudo eliminar la habilidad");
+      }
       onMensaje({ tipo: 'success', texto: 'Habilidad eliminada.' });
       cargarHabilidades();
     } catch (e) {

@@ -44,7 +44,7 @@ function PuestosPublicosPage({ onMensaje }: Props) {
   // Effect que carga todos los puestos públicos al montar el componente
   useEffect(() => {
     fetch("http://localhost:8080/api/publico/puestos", { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) })
-        .then(async (res) => { if (res.ok) return res.json(); throw new Error(await res.text()); })
+        .then(async (res) => { if (res.ok) return res.json(); throw new Error("No se pudieron cargar los puestos públicos"); })
         .then((res: PuestosResponse) => {
           setPuestos(res.puestos ?? []);
         })

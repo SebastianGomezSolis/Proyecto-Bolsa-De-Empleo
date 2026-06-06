@@ -41,17 +41,17 @@ function EmpresaPublicarPage({ onMensaje }: Props) {
       try {
         // Obtener las características raíz y construir el árbol completo
         const raizResp = await fetch("http://localhost:8080/api/publico/caracteristicas", { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
-        if (!raizResp.ok) throw new Error(await raizResp.text());
+        if (!raizResp.ok) throw new Error("No se pudieron cargar las características");;
         const raiz: Caracteristica[] = await raizResp.json();
         const conHijos = await Promise.all(
           raiz.map(async (r) => {
             const hijosResp = await fetch(`http://localhost:8080/api/publico/caracteristicas?padreId=${r.id}`, { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
-            if (!hijosResp.ok) throw new Error(await hijosResp.text());
+            if (!hijosResp.ok) throw new Error("No se pudieron cargar las características");
             const hijos: Caracteristica[] = await hijosResp.json();
             const hijosConNietos = await Promise.all(
               hijos.map(async (h) => {
                 const nietosResp = await fetch(`http://localhost:8080/api/publico/caracteristicas?padreId=${h.id}`, { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
-                if (!nietosResp.ok) throw new Error(await nietosResp.text());
+                if (!nietosResp.ok) throw new Error("No se pudieron cargar las características");
                 const nietos = await nietosResp.json();
                 return { ...h, hijos: nietos };
               })
@@ -104,7 +104,9 @@ function EmpresaPublicarPage({ onMensaje }: Props) {
         caracteristicaIds,
         niveles,
       }) });
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) {
+        throw new Error("No se pudo publicar el puesto");
+      }
       onMensaje({ tipo: 'success', texto: 'Puesto publicado correctamente.' });
       navigate('/empresa/puestos');
     } catch (error) {

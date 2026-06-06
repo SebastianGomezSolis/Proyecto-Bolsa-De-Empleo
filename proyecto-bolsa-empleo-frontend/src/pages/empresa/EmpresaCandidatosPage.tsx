@@ -56,8 +56,13 @@ function EmpresaCandidatosPage({ onMensaje }: Props) {
           fetch("http://localhost:8080/api/empresa/puestos", { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) }),
           fetch(`http://localhost:8080/api/empresa/puestos/${puestoId}/candidatos`, { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) }),
         ]);
-        if (!puestosResp.ok) throw new Error(await puestosResp.text());
-        if (!candsResp.ok) throw new Error(await candsResp.text());
+        if (!puestosResp.ok) {
+          throw new Error("No se pudo cargar la información del puesto");
+        }
+
+        if (!candsResp.ok) {
+          throw new Error("No se pudieron cargar los candidatos");
+        }
         const puestos = await puestosResp.json();
         const cands = await candsResp.json();
         // Buscar el puesto actual dentro de la lista de puestos

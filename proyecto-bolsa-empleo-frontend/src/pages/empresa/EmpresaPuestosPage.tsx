@@ -34,7 +34,7 @@ function EmpresaPuestosPage({ onMensaje }: Props) {
   const cargar = useCallback(() => {
     setCargando(true);
     fetch("http://localhost:8080/api/empresa/puestos", { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) })
-      .then(async (res) => { if (res.ok) setPuestos(await res.json()); else throw new Error(await res.text()); })
+      .then(async (res) => { if (res.ok) setPuestos(await res.json()); else throw new Error("No se pudieron cargar los puestos"); })
       .catch((e: Error) => onMensaje({ tipo: 'danger', texto: e.message }))
       .finally(() => setCargando(false));
   }, [onMensaje]);
@@ -53,7 +53,9 @@ function EmpresaPuestosPage({ onMensaje }: Props) {
     if (!window.confirm('¿Desactivar este puesto?')) return;
     try {
       const res = await fetch(`http://localhost:8080/api/empresa/puestos/${id}/desactivar`, { method: 'POST', headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) {
+        throw new Error("No se pudo desactivar el puesto");
+      }
       onMensaje({ tipo: 'success', texto: 'Puesto desactivado.' });
       cargar(); // Recargar la lista para reflejar el cambio
     } catch (e) {
@@ -65,7 +67,9 @@ function EmpresaPuestosPage({ onMensaje }: Props) {
   const activar = async (id: number) => {
     try {
       const res = await fetch(`http://localhost:8080/api/empresa/puestos/${id}/activar`, { method: 'POST', headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) {
+        throw new Error("No se pudo activar el puesto");
+      }
       onMensaje({ tipo: 'success', texto: 'Puesto activado.' });
       cargar(); // Recargar la lista para reflejar el cambio
     } catch (e) {

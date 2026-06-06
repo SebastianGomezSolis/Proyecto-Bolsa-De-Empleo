@@ -30,7 +30,10 @@ function OferenteCVPage({ onMensaje }: Props) {
   const navigate = useNavigate();
   const descargar = async (url: string) => {
     const res = await fetch(url, { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
-    if (!res.ok) { onMensaje({ tipo: 'danger', texto: await res.text() }); return; }
+    if (!res.ok) {
+      onMensaje({ tipo: 'danger', texto: "No se pudo abrir el CV" });
+      return;
+    }
     const blob = await res.blob();
     window.open(URL.createObjectURL(blob), '_blank');
   };
@@ -48,7 +51,7 @@ function OferenteCVPage({ onMensaje }: Props) {
   // Effect para cargar el perfil del oferente al montar el componente
   useEffect(() => {
     fetch("http://localhost:8080/api/oferente/perfil", { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) })
-        .then(async (res) => { if (res.ok) setOferente(await res.json()); else throw new Error(await res.text()); })
+        .then(async (res) => { if (res.ok) setOferente(await res.json()); else throw new Error("No se pudo cargar el perfil"); })
         .catch((e: Error) => onMensaje({ tipo: 'danger', texto: e.message }))
         .finally(() => setCargando(false));
   }, [onMensaje]);
@@ -61,11 +64,15 @@ function OferenteCVPage({ onMensaje }: Props) {
     try {
       const fd = new FormData(); fd.append('archivo', archivo);
       const subirRes = await fetch("http://localhost:8080/api/oferente/cv/subir", { method: 'POST', body: fd, headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
-      if (!subirRes.ok) throw new Error(await subirRes.text());
+      if (!subirRes.ok) {
+        throw new Error("No se pudo subir el CV");
+      }
       onMensaje({ tipo: 'success', texto: 'CV subido correctamente.' });
       setMostrarSubir(false);
       const perfilRes = await fetch("http://localhost:8080/api/oferente/perfil", { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
-      if (!perfilRes.ok) throw new Error(await perfilRes.text());
+      if (!perfilRes.ok) {
+        throw new Error("El CV se subió, pero no se pudo recargar el perfil");
+      }
       const perfil = await perfilRes.json();
       setOferente(perfil);
     } catch (err) {

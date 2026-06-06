@@ -57,7 +57,9 @@ function AdminCaracteristicasPage({ onMensaje }: Props) {
     try {
       // Llamada al backend para obtener características y metadata de navegación
       const res = await fetch(`http://localhost:8080/api/admin/caracteristicas${actualId != null ? `?actualId=${actualId}` : ''}`, { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) {
+        throw new Error("No se pudieron cargar las características");
+      }
       const resp = await res.json();
       // Actualizar estados con los datos recibidos
       setSubcategorias(resp.subcategorias ?? []);
@@ -114,7 +116,9 @@ function AdminCaracteristicasPage({ onMensaje }: Props) {
     try {
       // Llamada al backend para crear la característica
       const res = await fetch("http://localhost:8080/api/admin/caracteristicas", { method: "POST", headers: new Headers({ "Content-Type": "application/json", "Authorization": "Bearer " + localStorage.getItem("token") }), body: JSON.stringify({ nombre: nombre.trim(), padreId: actual?.id ?? null }) });
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) {
+        throw new Error("No se pudo crear la característica");
+      }
       onMensaje({ tipo: 'success', texto: 'Característica creada.' }); // Mostrar éxito
       setNombre(''); // Limpiar campo de nombre
       // Recargar la lista de características para mostrar la nueva creada

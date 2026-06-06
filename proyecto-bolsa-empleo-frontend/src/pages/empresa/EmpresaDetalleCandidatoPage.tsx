@@ -38,7 +38,10 @@ function EmpresaDetalleCandidatoPage({ onMensaje }: Props) {
   const { id, puestoId } = useParams();
   const descargar = async (url: string) => {
     const res = await fetch(url, { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
-    if (!res.ok) { onMensaje({ tipo: 'danger', texto: await res.text() }); return; }
+    if (!res.ok) {
+      onMensaje({ tipo: 'danger', texto: "No se pudo abrir el currículum" });
+      return;
+    }
     const blob = await res.blob();
     window.open(URL.createObjectURL(blob), '_blank');
   };
@@ -54,7 +57,7 @@ function EmpresaDetalleCandidatoPage({ onMensaje }: Props) {
     // Solo proceder si el usuario es empresa, existe un ID de oferente y un ID de puesto
     if (!id || !puestoId) return;
     fetch(`http://localhost:8080/api/empresa/candidatos/${id}?puestoId=${puestoId}`, { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) })
-      .then(async (res) => { if (res.ok) { const data = await res.json(); setOferente(data.oferente); setHabilidades(data.habilidades || []); } else throw new Error(await res.text()); })
+      .then(async (res) => { if (res.ok) { const data = await res.json(); setOferente(data.oferente); setHabilidades(data.habilidades || []); } else throw new Error("No se pudo cargar el detalle del candidato"); })
       .catch((e: Error) => onMensaje({ tipo: 'danger', texto: e.message }))
       .finally(() => setCargando(false));
   }, [id, puestoId, onMensaje]);

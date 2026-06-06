@@ -33,7 +33,9 @@ function LoginPage({ onMensaje }: Props) {
         headers: new Headers({ "Content-Type": "application/json" }),
         body: JSON.stringify({ correo: form.correo, clave: form.clave })
       });
-      if (!response.ok) throw new Error(await response.text());
+      if (!response.ok) {
+        throw new Error("Correo o contraseña incorrectos");
+      }
       const datos = await response.json();
 
       if (recordar) {

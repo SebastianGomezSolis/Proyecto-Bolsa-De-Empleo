@@ -55,17 +55,17 @@ function OferenteBuscarPuestoPage({ onMensaje }: Props) {
       try {
         // Obtener raíces y sus hijos y nietos para construir el árbol
         const raizRes = await fetch("http://localhost:8080/api/publico/caracteristicas", { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
-        if (!raizRes.ok) throw new Error(await raizRes.text());
+        if (!raizRes.ok) throw new Error("No se pudieron cargar las características");
         const raiz: Caracteristica[] = await raizRes.json();
         const conHijos = await Promise.all(
           raiz.map(async (r) => {
             const hijosRes = await fetch(`http://localhost:8080/api/publico/caracteristicas?padreId=${r.id}`, { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
-            if (!hijosRes.ok) throw new Error(await hijosRes.text());
+            if (!hijosRes.ok) throw new Error("No se pudieron cargar las características");
             const hijos: Caracteristica[] = await hijosRes.json();
             const hijosConNietos = await Promise.all(
               hijos.map(async (h) => {
                 const nietosRes = await fetch(`http://localhost:8080/api/publico/caracteristicas?padreId=${h.id}`, { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
-                if (!nietosRes.ok) throw new Error(await nietosRes.text());
+                if (!nietosRes.ok) throw new Error("No se pudieron cargar las características");
                 const nietos = await nietosRes.json();
                 return { ...h, hijos: nietos };
               })
@@ -94,7 +94,9 @@ function OferenteBuscarPuestoPage({ onMensaje }: Props) {
     try {
       const params = seleccionados.length > 0 ? `?caracteristicaIds=${seleccionados.join(',')}` : '';
       const buscarRes = await fetch(`http://localhost:8080/api/oferente/puestos/buscar${params}`, { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
-      if (!buscarRes.ok) throw new Error(await buscarRes.text());
+      if (!buscarRes.ok) {
+        throw new Error("No se pudieron buscar los puestos");
+      }
       const res = await buscarRes.json();
       setPuestos((res.puestos ?? []).map((p: Puesto) => ({ ...p, tipoCambio: res.tipoCambio })));
     } catch (e) {

@@ -35,7 +35,9 @@ interface Puesto {
 async function cargarArbolCompleto(padreId: number | null = null): Promise<Caracteristica[]> {
   const url = padreId ? `http://localhost:8080/api/publico/caracteristicas?padreId=${padreId}` : `http://localhost:8080/api/publico/caracteristicas`;
   const response = await fetch(url, { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
-  if (!response.ok) throw new Error(await response.text());
+  if (!response.ok) {
+    throw new Error("No se pudieron cargar las características");
+  }
   const nodos: Caracteristica[] = await response.json();
   return Promise.all(
       nodos.map(async (n) => {
@@ -81,7 +83,9 @@ function BuscarPuestoPublicoPage({ onMensaje }: Props) {
     try {
       const params = seleccionados.length ? `?caracteristicaIds=${seleccionados.join(',')}` : '';
       const response = await fetch(`http://localhost:8080/api/publico/puestos/buscar${params}`, { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
-      if (!response.ok) throw new Error(await response.text());
+      if (!response.ok) {
+        throw new Error("No se pudieron buscar los puestos");
+      }
       const res = await response.json();
       setPuestos((res.puestos ?? []).map((p: Puesto) => ({ ...p, tipoCambio: res.tipoCambio })));
     } catch (e) {
