@@ -50,7 +50,17 @@ function RegistroOferentePage({ onMensaje }: Props) {
         body: JSON.stringify(form),
       });
       if (!response.ok) {
-        throw new Error("No se pudo realizar el registro del oferente");
+        // Intentar obtener mensaje de error del cuerpo de la respuesta
+        let mensaje = "No se pudo realizar el registro del oferente";
+        try {
+          const data = await response.json();
+          if (data && typeof data.message === 'string') {
+            mensaje = data.message;
+          }
+        } catch (e) {
+          // Si falla el parseo, mantener mensaje genérico
+        }
+        throw new Error(mensaje);
       }
       onMensaje({ tipo: 'success', texto: 'Registro exitoso. Espere la aprobación del administrador.' });
       navigate('/login');

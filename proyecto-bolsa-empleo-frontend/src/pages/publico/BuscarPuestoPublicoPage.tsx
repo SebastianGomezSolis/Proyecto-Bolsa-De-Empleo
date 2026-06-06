@@ -84,7 +84,17 @@ function BuscarPuestoPublicoPage({ onMensaje }: Props) {
       const params = seleccionados.length ? `?caracteristicaIds=${seleccionados.join(',')}` : '';
       const response = await fetch(`http://localhost:8080/api/publico/puestos/buscar${params}`, { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
       if (!response.ok) {
-        throw new Error("No se pudieron buscar los puestos");
+        // Intentar obtener mensaje de error del cuerpo de la respuesta
+        let mensaje = "No se pudieron buscar los puestos";
+        try {
+          const data = await response.json();
+          if (data && typeof data.message === 'string') {
+            mensaje = data.message;
+          }
+        } catch (e) {
+          // Mantener mensaje genérico si el parseo falla
+        }
+        throw new Error(mensaje);
       }
       const res = await response.json();
       setPuestos((res.puestos ?? []).map((p: Puesto) => ({ ...p, tipoCambio: res.tipoCambio })));

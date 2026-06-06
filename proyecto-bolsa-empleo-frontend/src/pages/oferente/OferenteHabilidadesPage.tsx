@@ -50,11 +50,27 @@ function OferenteHabilidadesPage({ onMensaje }: Props) {
   const [hojas, setHojas] = useState<Set<number>>(new Set());
 
   // Recargar la lista de habilidades desde el backend
-  const cargarHabilidades = () =>
-      fetch("http://localhost:8080/api/oferente/habilidades", { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) })
-          .then(async (res) => { if (res.ok) return res.json(); else throw new Error("No se pudieron cargar las habilidades"); })
-          .then(setHabilidades)
-          .catch((e: Error) => onMensaje({ tipo: 'danger', texto: e.message }));
+  const cargarHabilidades = async () => {
+    try {
+      const res = await fetch("http://localhost:8080/api/oferente/habilidades", {
+        headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") })
+      });
+      if (!res.ok) {
+        let mensaje = "No se pudieron cargar las habilidades";
+        try {
+          const data = await res.json();
+          if (data && typeof data.message === 'string') {
+            mensaje = data.message;
+          }
+        } catch (_) {}
+        throw new Error(mensaje);
+      }
+      const datos = await res.json();
+      setHabilidades(datos);
+    } catch (e) {
+      onMensaje({ tipo: 'danger', texto: (e as Error).message });
+    }
+  };
 
   // Cargar subcategorías de un padre (o raíces si padreId es null)
   const cargarSubcategorias = async (padreId: number | null = null) => {
@@ -84,23 +100,35 @@ function OferenteHabilidadesPage({ onMensaje }: Props) {
 
   // Effect para cargar habilidades y categorías raíz al montar el componente
   useEffect(() => {
-    Promise.all([
-      fetch("http://localhost:8080/api/oferente/habilidades", { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) }),
-      fetch("http://localhost:8080/api/publico/caracteristicas", { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) })
-    ])
-        .then(async ([hRes, rRes]) => {
-          if (!hRes.ok) {
-            throw new Error("No se pudieron cargar las habilidades");
-          }
-
-          if (!rRes.ok) {
-            throw new Error("No se pudieron cargar las características");
-          }
-          return Promise.all([hRes.json(), rRes.json()]);
-        })
-        .then(([h, r]) => { setHabilidades(h); setSubcategorias(r); })
-        .catch((e: Error) => onMensaje({ tipo: 'danger', texto: e.message }))
-        .finally(() => setCargando(false));
+    const cargarDatos = async () => {
+      try {
+        const [hRes, rRes] = await Promise.all([
+          fetch("http://localhost:8080/api/oferente/habilidades", { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) }),
+          fetch("http://localhost:8080/api/publico/caracteristicas", { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) })
+        ]);
+        if (!hRes.ok) {
+          let mensaje = "No se pudieron cargar las habilidades";
+          try {
+            const data = await hRes.json();
+            if (data && typeof data.message === 'string') {
+              mensaje = data.message;
+            }
+          } catch (_) {}
+          throw new Error(mensaje);
+        }
+        if (!rRes.ok) {
+          throw new Error("No se pudieron cargar las características");
+        }
+        const [h, r] = await Promise.all([hRes.json(), rRes.json()]);
+        setHabilidades(h);
+        setSubcategorias(r);
+      } catch (e) {
+        onMensaje({ tipo: 'danger', texto: (e as Error).message });
+      } finally {
+        setCargando(false);
+      }
+    };
+    cargarDatos();
   }, [onMensaje]);
 
   // Navegar a una subcategoría (hacia adentro del árbol)
