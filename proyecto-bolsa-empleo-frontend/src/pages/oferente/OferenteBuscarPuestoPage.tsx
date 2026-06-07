@@ -55,17 +55,53 @@ function OferenteBuscarPuestoPage({ onMensaje }: Props) {
       try {
         // Obtener raíces y sus hijos y nietos para construir el árbol
         const raizRes = await fetch("http://localhost:8080/api/publico/caracteristicas", { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
-        if (!raizRes.ok) throw new Error("No se pudieron cargar las características");
+        if (!raizRes.ok) {
+  let errMsg = "No se pudieron cargar las características";
+  try {
+    const data = await raizRes.json();
+    if (data?.message) errMsg = data.message;
+  } catch {
+    try {
+      const txt = await raizRes.text();
+      if (txt) errMsg = txt;
+    } catch {}
+  }
+  throw new Error(errMsg);
+}
         const raiz: Caracteristica[] = await raizRes.json();
         const conHijos = await Promise.all(
           raiz.map(async (r) => {
             const hijosRes = await fetch(`http://localhost:8080/api/publico/caracteristicas?padreId=${r.id}`, { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
-            if (!hijosRes.ok) throw new Error("No se pudieron cargar las características");
+            if (!hijosRes.ok) {
+  let errMsg = "No se pudieron cargar las características";
+  try {
+    const data = await hijosRes.json();
+    if (data?.message) errMsg = data.message;
+  } catch {
+    try {
+      const txt = await hijosRes.text();
+      if (txt) errMsg = txt;
+    } catch {}
+  }
+  throw new Error(errMsg);
+}
             const hijos: Caracteristica[] = await hijosRes.json();
             const hijosConNietos = await Promise.all(
               hijos.map(async (h) => {
                 const nietosRes = await fetch(`http://localhost:8080/api/publico/caracteristicas?padreId=${h.id}`, { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
-                if (!nietosRes.ok) throw new Error("No se pudieron cargar las características");
+                if (!nietosRes.ok) {
+  let errMsg = "No se pudieron cargar las características";
+  try {
+    const data = await nietosRes.json();
+    if (data?.message) errMsg = data.message;
+  } catch {
+    try {
+      const txt = await nietosRes.text();
+      if (txt) errMsg = txt;
+    } catch {}
+  }
+  throw new Error(errMsg);
+}
                 const nietos = await nietosRes.json();
                 return { ...h, hijos: nietos };
               })

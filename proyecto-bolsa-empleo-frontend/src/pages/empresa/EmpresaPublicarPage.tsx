@@ -41,7 +41,19 @@ function EmpresaPublicarPage({ onMensaje }: Props) {
       try {
         // Obtener las características raíz y construir el árbol completo
         const raizResp = await fetch("http://localhost:8080/api/publico/caracteristicas", { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
-        if (!raizResp.ok) throw new Error("No se pudieron cargar las características");;
+        if (!raizResp.ok) {
+        let errMsg = "No se pudieron cargar las características";
+        try {
+          const data = await raizResp.json();
+          if (data?.message) errMsg = data.message;
+        } catch {
+          try {
+            const txt = await raizResp.text();
+            if (txt) errMsg = txt;
+          } catch {}
+        }
+        throw new Error(errMsg);
+      };
         const raiz: Caracteristica[] = await raizResp.json();
         const conHijos = await Promise.all(
           raiz.map(async (r) => {
@@ -105,7 +117,15 @@ function EmpresaPublicarPage({ onMensaje }: Props) {
         niveles,
       }) });
       if (!res.ok) {
-        throw new Error("No se pudo publicar el puesto");
+        // Obtener mensaje específico del backend para errores de validación
+        let errorMsg = "No se pudo publicar el puesto";
+        try {
+          const errorText = await res.text();
+          if (errorText && errorText.trim() !== '') {
+            errorMsg = errorText;
+          }
+        } catch {}
+        throw new Error(errorMsg);
       }
       onMensaje({ tipo: 'success', texto: 'Puesto publicado correctamente.' });
       navigate('/empresa/puestos');

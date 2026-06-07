@@ -58,7 +58,18 @@ function AdminCaracteristicasPage({ onMensaje }: Props) {
       // Llamada al backend para obtener características y metadata de navegación
       const res = await fetch(`http://localhost:8080/api/admin/caracteristicas${actualId != null ? `?actualId=${actualId}` : ''}`, { headers: new Headers({ "Authorization": "Bearer " + localStorage.getItem("token") }) });
       if (!res.ok) {
-        throw new Error("No se pudieron cargar las características");
+        // Intentar obtener mensaje de error del backend (JSON o texto plano)
+        let errMsg = "No se pudieron cargar las características";
+        try {
+          const data = await res.json();
+          if (data?.message) errMsg = data.message;
+        } catch {
+          try {
+            const txt = await res.text();
+            if (txt) errMsg = txt;
+          } catch {}
+        }
+        throw new Error(errMsg);
       }
       const resp = await res.json();
       // Actualizar estados con los datos recibidos
@@ -117,15 +128,32 @@ function AdminCaracteristicasPage({ onMensaje }: Props) {
       // Llamada al backend para crear la característica
       const res = await fetch("http://localhost:8080/api/admin/caracteristicas", { method: "POST", headers: new Headers({ "Content-Type": "application/json", "Authorization": "Bearer " + localStorage.getItem("token") }), body: JSON.stringify({ nombre: nombre.trim(), padreId: actual?.id ?? null }) });
       if (!res.ok) {
-        throw new Error("No se pudo crear la característica");
+        // Obtener mensaje específico del backend para errores de validación
+        let errorMsg = "No se pudo crear la característica";
+        try {
+          // El backend devuelve JSON con estructura: { message: "...", trace: "...", ... }
+          const errorData = await res.json();
+          if (errorData && errorData.message) {
+            errorMsg = errorData.message;
+          }
+        } catch {
+          // Si no se puede parsear JSON, intentar como texto plano
+          try {
+            const errorText = await res.text();
+            if (errorText && errorText.trim() !== '') {
+              errorMsg = errorText;
+            }
+          } catch {}
+        }
+        throw new Error(errorMsg);
       }
       onMensaje({ tipo: 'success', texto: 'Característica creada.' }); // Mostrar éxito
       setNombre(''); // Limpiar campo de nombre
       // Recargar la lista de características para mostrar la nueva creada
       await cargarNodo(actual?.id ?? null);
-    } catch (e) {
+    } catch (error) {
       // Mostrar mensaje de error si falla la creación
-      onMensaje({ tipo: 'danger', texto: (e as Error).message });
+      onMensaje({ tipo: 'danger', texto: (error as Error).message });
     }
   };
 
