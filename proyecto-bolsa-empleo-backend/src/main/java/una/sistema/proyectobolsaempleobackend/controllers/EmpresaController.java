@@ -2,6 +2,7 @@ package una.sistema.proyectobolsaempleobackend.controllers;
 
 import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
@@ -30,6 +31,9 @@ import java.util.Map;
 public class EmpresaController {
     @Autowired
     private ModeloDatos modeloDatos;
+
+    @Value("${app.cv.upload-dir}")
+    private String cvUploadDir;
 
     private Path cvBaseDir;
 
@@ -172,20 +176,16 @@ public class EmpresaController {
 
     @PostConstruct
     public void init() {
-        String wd = System.getProperty("user.dir");
-        Path p1 = Paths.get(wd, "..", "proyecto-bolsa-empleo-frontend", "public", "uploads", "curriculos").normalize();
-        Path p2 = Paths.get(wd, "proyecto-bolsa-empleo-frontend", "public", "uploads", "curriculos").normalize();
-        for (Path p : new Path[]{p1, p2}) {
-            Path frontendDir = p.getParent().getParent().getParent();
-            if (frontendDir != null && Files.exists(frontendDir.resolve("package.json"))) {
-                try {
-                    Files.createDirectories(p);
-                    cvBaseDir = p;
-                    return;
-                } catch (Exception ignored) {}
-            }
+        Path configurada = Paths.get(cvUploadDir);
+        if (!configurada.isAbsolute()) {
+            configurada = Paths.get(System.getProperty("user.dir"), cvUploadDir).normalize();
         }
-        cvBaseDir = Paths.get(wd, "uploads", "curriculos").normalize();
+        try {
+            Files.createDirectories(configurada);
+            cvBaseDir = configurada;
+            return;
+        } catch (Exception ignored) {}
+        cvBaseDir = Paths.get(System.getProperty("user.dir"), "uploads", "curriculos").normalize();
         try {
             Files.createDirectories(cvBaseDir);
         } catch (Exception e) {
